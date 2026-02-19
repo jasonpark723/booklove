@@ -9,7 +9,7 @@ TRUNCATE user_read_books, user_passes, user_matches, characters, books CASCADE;
 -- BOOKS
 -- ============================================
 
-INSERT INTO books (id, title, author, description, cover_image_url, amazon_affiliate_link, genre, sub_genres, spice_level, mature_themes, content_tags, series_name, series_order, is_published)
+INSERT INTO books (id, title, author, description, cover_image_url, amazon_affiliate_link, genre, tags, spice_level, mature_themes, series_name, series_order, is_published)
 VALUES
   -- A Court of Thorns and Roses
   (
@@ -20,10 +20,9 @@ VALUES
     'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1620324329i/50659467.jpg',
     'https://www.amazon.com/dp/1635575567?tag=booklove-20',
     'Fantasy',
-    ARRAY['Romantasy', 'Fae', 'Romance'],
+    ARRAY['enemies-to-lovers', 'fae', 'slow-burn', 'found-family'],
     3,
     true,
-    ARRAY['enemies-to-lovers', 'fae', 'slow-burn', 'found-family'],
     'A Court of Thorns and Roses',
     1,
     true
@@ -37,10 +36,9 @@ VALUES
     'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1701980900i/61431922.jpg',
     'https://www.amazon.com/dp/1649374046?tag=booklove-20',
     'Fantasy',
-    ARRAY['Romantasy', 'Dragons', 'Academy'],
+    ARRAY['enemies-to-lovers', 'dragons', 'military-academy', 'forced-proximity'],
     3,
     true,
-    ARRAY['enemies-to-lovers', 'dragons', 'military-academy', 'forced-proximity'],
     'The Empyrean',
     1,
     true
@@ -51,13 +49,12 @@ VALUES
     'From Blood and Ash',
     'Jennifer L. Armentrout',
     'Chosen from birth to usher in a new era, Poppy''s life has never been her own. The life of the Maiden is solitary. But when Hawke, a golden-eyed guard honor-bound to protect her, enters her life, destiny and duty become tangled.',
-    'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1588843906i/52831200.jpg',
+    'https://m.media-amazon.com/images/I/719C-isEuzL._AC_UF1000,1000_QL80_.jpg',
     'https://www.amazon.com/dp/1952457009?tag=booklove-20',
     'Fantasy',
-    ARRAY['Romantasy', 'Vampires', 'Romance'],
+    ARRAY['forbidden-love', 'hidden-identity', 'slow-burn', 'protective-hero'],
     3,
     true,
-    ARRAY['forbidden-love', 'hidden-identity', 'slow-burn', 'protective-hero'],
     'Blood and Ash',
     1,
     true
@@ -68,13 +65,12 @@ VALUES
     'The Cruel Prince',
     'Holly Black',
     'Jude was seven when her parents were murdered and she and her two sisters were stolen away to live in the treacherous High Court of Faerie. Ten years later, Jude wants nothing more than to belong there, despite her mortality.',
-    'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1587166586i/26032825.jpg',
+    'https://m.media-amazon.com/images/I/91ZL7X6tReL._SY445_SX342_FMwebp_.jpg',
     'https://www.amazon.com/dp/0316310271?tag=booklove-20',
     'Fantasy',
-    ARRAY['Romantasy', 'Fae', 'Dark Romance'],
+    ARRAY['enemies-to-lovers', 'fae', 'morally-gray', 'political-intrigue'],
     2,
     true,
-    ARRAY['enemies-to-lovers', 'fae', 'morally-gray', 'political-intrigue'],
     'The Folk of the Air',
     1,
     true
@@ -85,13 +81,12 @@ VALUES
     'Kingdom of the Wicked',
     'Kerri Maniscalco',
     'Emilia and her twin sister Vittoria are streghe – witches who live secretly among humans. When Vittoria is murdered, Emilia sets out to find the killer and unwittingly summons one of the Wicked – princes of Hell.',
-    'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1587163930i/52379947.jpg',
-    'https://www.amazon.com/dp/0316428442?tag=booklove-20',
+    'https://m.media-amazon.com/images/I/81MtcJlSRiL._SL1500_.jpg',
+    NULL,
     'Fantasy',
-    ARRAY['Romantasy', 'Witches', 'Demons'],
+    ARRAY['enemies-to-lovers', 'demons', 'witches', 'revenge'],
     2,
     true,
-    ARRAY['enemies-to-lovers', 'demons', 'witches', 'revenge'],
     'Kingdom of the Wicked',
     1,
     true
