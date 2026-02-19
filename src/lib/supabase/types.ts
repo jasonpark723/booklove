@@ -19,12 +19,11 @@ export interface Database {
           author: string
           description: string | null
           cover_image_url: string | null
-          amazon_affiliate_link: string
+          amazon_affiliate_link: string | null
           genre: string
-          sub_genres: string[]
+          tags: string[]
           spice_level: number
           mature_themes: boolean
-          content_tags: string[]
           series_name: string | null
           series_order: number | null
           is_published: boolean
@@ -37,12 +36,11 @@ export interface Database {
           author: string
           description?: string | null
           cover_image_url?: string | null
-          amazon_affiliate_link: string
+          amazon_affiliate_link?: string | null
           genre?: string
-          sub_genres?: string[]
+          tags?: string[]
           spice_level?: number
           mature_themes?: boolean
-          content_tags?: string[]
           series_name?: string | null
           series_order?: number | null
           is_published?: boolean
@@ -55,17 +53,34 @@ export interface Database {
           author?: string
           description?: string | null
           cover_image_url?: string | null
-          amazon_affiliate_link?: string
+          amazon_affiliate_link?: string | null
           genre?: string
-          sub_genres?: string[]
+          tags?: string[]
           spice_level?: number
           mature_themes?: boolean
-          content_tags?: string[]
           series_name?: string | null
           series_order?: number | null
           is_published?: boolean
           created_at?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      tags: {
+        Row: {
+          id: string
+          name: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          created_at?: string
         }
         Relationships: []
       }

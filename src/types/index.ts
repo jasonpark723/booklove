@@ -6,8 +6,8 @@ export type Nullable<T> = T | null;
 export type Optional<T> = T | undefined;
 
 // Book types
-export type { Book, BookFormData, SpiceLevel } from './book';
-export { SPICE_LABELS, SPICE_DESCRIPTIONS } from './book';
+export type { Book, BookFormData, SpiceLevel, Genre, Tag } from './book';
+export { SPICE_LABELS, SPICE_DESCRIPTIONS, GENRES } from './book';
 
 // Character types
 export type {

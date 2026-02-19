@@ -16,23 +16,38 @@ export const SPICE_DESCRIPTIONS: Record<SpiceLevel, string> = {
   3: 'Explicit content throughout',
 };
 
+export const GENRES = [
+  'Mystery',
+  'Thriller',
+  'Romance',
+  'Fantasy',
+  'Science Fiction',
+] as const;
+
+export type Genre = (typeof GENRES)[number];
+
 export interface Book {
   id: string;
   title: string;
   author: string;
   description: string | null;
   cover_image_url: string | null;
-  amazon_affiliate_link: string;
-  genre: string;
-  sub_genres: string[];
+  amazon_affiliate_link: string | null;
+  genre: Genre;
+  tags: string[];
   spice_level: SpiceLevel;
   mature_themes: boolean;
-  content_tags: string[];
   series_name: string | null;
   series_order: number | null;
   is_published: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  created_at: string;
 }
 
 export interface BookFormData {
@@ -41,11 +56,10 @@ export interface BookFormData {
   description: string;
   cover_image_url: string;
   amazon_affiliate_link: string;
-  genre: string;
-  sub_genres: string[];
+  genre: Genre;
+  tags: string[];
   spice_level: SpiceLevel;
   mature_themes: boolean;
-  content_tags: string[];
   series_name: string;
   series_order: number | null;
   is_published: boolean;
