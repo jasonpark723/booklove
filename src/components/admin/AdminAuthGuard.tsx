@@ -10,7 +10,7 @@ interface AdminAuthGuardProps {
 }
 
 export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
-  const { user, isAdmin, isLoading } = useAuth();
+  const { user, profile, isAdmin, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -19,7 +19,8 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
     }
   }, [isLoading, user, router]);
 
-  if (isLoading) {
+  // Show loading while auth or profile is being fetched
+  if (isLoading || (user && profile === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">

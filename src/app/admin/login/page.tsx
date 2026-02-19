@@ -12,13 +12,21 @@ export default function AdminLoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  const { user, isAdmin, isLoading } = useAuth();
+  const { user, profile, isAdmin, isLoading, signOut } = useAuth();
 
   useEffect(() => {
-    if (!isLoading && user && isAdmin) {
-      router.push('/admin/dashboard');
+    // Wait for both auth and profile to be loaded
+    if (!isLoading && user && profile !== null) {
+      if (isAdmin) {
+        router.push('/admin/dashboard');
+      } else {
+        // User is logged in but not an admin - show error and sign out
+        setError('You do not have admin access. Please sign in with an admin account.');
+        setIsSubmitting(false);
+        signOut();
+      }
     }
-  }, [isLoading, user, isAdmin, router]);
+  }, [isLoading, user, profile, isAdmin, router, signOut]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
