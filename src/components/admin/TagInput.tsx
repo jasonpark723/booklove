@@ -32,23 +32,33 @@ export function TagInput({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      addTag();
+      addTags();
     } else if (e.key === 'Backspace' && inputValue === '' && value.length > 0) {
       // Remove last tag when backspace is pressed on empty input
       removeTag(value[value.length - 1]);
     }
   };
 
-  const addTag = () => {
-    const trimmed = inputValue.trim();
-    if (!trimmed) return;
+  const addTags = () => {
+    if (!inputValue.trim()) return;
     if (value.length >= maxTags) return;
-    if (value.includes(trimmed)) {
+
+    // Split by comma, trim each, filter empty/duplicates
+    const newTags = inputValue
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag && !value.includes(tag));
+
+    if (newTags.length === 0) {
       setInputValue('');
       return;
     }
 
-    onChange([...value, trimmed]);
+    // Add as many as possible up to maxTags
+    const availableSlots = maxTags - value.length;
+    const tagsToAdd = newTags.slice(0, availableSlots);
+
+    onChange([...value, ...tagsToAdd]);
     setInputValue('');
   };
 
@@ -97,7 +107,7 @@ export function TagInput({
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          onBlur={addTag}
+          onBlur={addTags}
           placeholder={value.length === 0 ? placeholder : ''}
           disabled={disabled || value.length >= maxTags}
           className={cn(
