@@ -9,6 +9,12 @@ export interface CharacterPrompt {
   answer: string;
 }
 
+export interface CharacterImage {
+  url: string;
+  is_primary: boolean;
+  sort_order: number;
+}
+
 export interface Character {
   id: string;
   book_id: string;
@@ -18,8 +24,10 @@ export interface Character {
   hobbies: string[];
   occupation: string | null;
   prompts: CharacterPrompt[];
-  profile_image_url: string | null;
+  images: CharacterImage[];
   is_published: boolean;
+  is_deleted: boolean;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -37,6 +45,6 @@ export interface CharacterFormData {
   hobbies: string[];
   occupation: string;
   prompts: CharacterPrompt[];
-  profile_image_url: string;
+  images: CharacterImage[];
   is_published: boolean;
 }

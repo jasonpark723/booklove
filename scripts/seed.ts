@@ -114,8 +114,9 @@ const characters = [
       { prompt: 'My ideal first date', answer: 'Flying over Velaris at sunset, followed by dinner at my favorite restaurant overlooking the Sidra. I promise the view is worth the vertigo.' },
       { prompt: "I'm looking for someone who", answer: 'Sees beyond the mask I show the world. Someone fierce, brave, and willing to fight beside me—not behind me.' },
     ],
-    profile_image_url: null,
+    images: [],
     is_published: true,
+    is_deleted: false,
   },
   {
     id: 'c1000000-0000-0000-0000-000000000002',
@@ -130,8 +131,9 @@ const characters = [
       { prompt: 'My love language is', answer: "Acts of service. I'll fight your battles, carry your burdens, and always—always—have your back. Also, quality time. Preferably sparring." },
       { prompt: "I'll know it's love when", answer: "I'd give up my wings for her. And trust me, that's not something I say lightly." },
     ],
-    profile_image_url: null,
+    images: [],
     is_published: true,
+    is_deleted: false,
   },
   {
     id: 'c1000000-0000-0000-0000-000000000003',
@@ -146,8 +148,9 @@ const characters = [
       { prompt: "The thing I'm most passionate about", answer: 'Protecting the people I love, even if they hate me for it. Some secrets are worth keeping if it means keeping you safe.' },
       { prompt: 'You should NOT go out with me if', answer: "You can't handle a little danger. Or a lot of danger. My life comes with shadows, dragons, and a target on my back." },
     ],
-    profile_image_url: null,
+    images: [],
     is_published: true,
+    is_deleted: false,
   },
   {
     id: 'c1000000-0000-0000-0000-000000000004',
@@ -162,8 +165,9 @@ const characters = [
       { prompt: "I'll brag about you to my friends by saying", answer: "She's brave, fierce, and completely unaware of how powerful she truly is. Also, she has a habit of stabbing me, and I find it oddly endearing." },
       { prompt: 'The quickest way to my heart', answer: "Be yourself. I've waited a very, very long time to find you. I'm not interested in masks or pretense. Just you." },
     ],
-    profile_image_url: null,
+    images: [],
     is_published: true,
+    is_deleted: false,
   },
   {
     id: 'c1000000-0000-0000-0000-000000000005',
@@ -178,8 +182,9 @@ const characters = [
       { prompt: 'My most controversial opinion', answer: "Cruelty is just honesty without the pretty wrapping. At least when I'm awful, you know exactly where you stand." },
       { prompt: "The one thing I'd change about myself", answer: 'The way I hurt her before I understood what she meant to me. I have a lifetime of making amends, and I intend to use every moment.' },
     ],
-    profile_image_url: null,
+    images: [],
     is_published: true,
+    is_deleted: false,
   },
   {
     id: 'c1000000-0000-0000-0000-000000000006',
@@ -194,8 +199,9 @@ const characters = [
       { prompt: 'My perfect night in', answer: 'Cooking you an elaborate dinner while you tell me about your day. Then plotting revenge against your enemies together.' },
       { prompt: "I'm weirdly attracted to", answer: 'Stubborn witches who threaten me with amulets and refuse to back down. Your fury is intoxicating.' },
     ],
-    profile_image_url: null,
+    images: [],
     is_published: true,
+    is_deleted: false,
   },
 ];
 

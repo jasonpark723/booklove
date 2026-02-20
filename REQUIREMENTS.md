@@ -1,6 +1,7 @@
 # BookLove - Requirements Document
 
 Generated: 2026-02-19
+Last Updated: 2026-02-19
 
 ## 1. Executive Summary
 
@@ -53,7 +54,7 @@ Generated: 2026-02-19
 | Character Profiles | Name, traits, hobbies, occupation, Hinge-style prompts, vibe image (no face) | As a reader, I want to see character personality without spoilers so I can judge interest | P0 |
 | Book Reveal | On match, show book cover, title, description, Amazon affiliate link | As a reader, I want to discover which book the character is from so I can purchase it | P0 |
 | Genre Filter | Filter characters by fantasy sub-genre | As a reader, I want to filter by sub-genre so I see relevant characters | P0 |
-| Content Tags | Spice level, mature themes indicators | As a reader, I want to know content intensity so I can choose appropriately | P0 |
+| Content Tags | Spice level (0-3), mature themes indicators | As a reader, I want to know content intensity so I can choose appropriately | P0 |
 | Saved Matches (Chat Log) | List of matched characters/books | As a reader, I want to save my matches so I can revisit them later | P0 |
 | Bootycall Section | Pile of passed characters that can be revisited | As a reader, I want to revisit passed characters so nothing is permanently lost | P0 |
 | "Already Read" Action | In bootycall section, remove book + all its characters from pool | As a reader, I want to mark books I've read so I don't see those characters again | P0 |
@@ -78,19 +79,20 @@ Generated: 2026-02-19
 ### Workflow 1: First-Time Discovery
 
 1. User lands on BookLove homepage
-2. Optionally sets genre preferences (or skips for all fantasy)
-3. Sees first character card (name, traits, hobbies, occupation, prompts, vibe image)
-4. Swipes right (interested) → Book reveal appears (cover, title, description, content tags, affiliate link)
-5. User can: Purchase on Amazon | Save to Chat Log | Continue Swiping
-6. Swipes left (not interested) → Character goes to Bootycall section
-7. Continues swiping through characters
+2. Taps "Get Started"
+3. **Onboarding**: Selects preferences (genres + spicy) in single multi-select step
+4. Sees first character card (name, traits, hobbies, occupation, prompts, vibe image)
+5. Swipes right (interested) → Book reveal appears (cover, title, description, content tags, affiliate link)
+6. User can: Purchase on Amazon | Save to Chat Log | Continue Swiping
+7. Swipes left (not interested) → Character goes to Bootycall section
+8. Continues swiping through characters
 
 ### Workflow 2: Revisiting Passed Characters
 
 1. User opens Bootycall section from bottom nav
 2. Browses previously passed characters
 3. Can swipe right to match (reveals book)
-4. Can tap "Already Read" to remove book + all its characters from pool
+4. Can tap "Already Read" to remove book from read pool (characters from same book/series still visible for fun browsing)
 
 ### Workflow 3: Viewing Saved Matches
 
@@ -103,7 +105,7 @@ Generated: 2026-02-19
 
 1. User taps Profile in bottom nav
 2. Prompted to create account (email/password)
-3. On signup, progress is saved to account
+3. On signup, localStorage data migrates to database
 4. On return visit, can log in to restore matches, bootycall list, and preferences
 
 ### Workflow 5: Admin Content Management
@@ -114,62 +116,115 @@ Generated: 2026-02-19
 4. For series: links character to first book in series
 5. Publishes content to make it visible to users
 
+### Workflow 6: Reset Passed Characters
+
+1. User has swiped through all available characters
+2. System shows "No more characters" with option to reset
+3. Reset clears passed characters (Bootycall) back to pool
+4. Matched characters remain in Chat Log and are NOT shown again
+5. User can continue swiping on previously passed characters
+
 ## 5. Data Model
 
 ### Entities
 
 **Book**
 - id: UUID (primary key)
-- title: string
-- author: string
+- title: string (required)
+- author: string (required)
 - description: text
 - cover_image_url: string
-- amazon_affiliate_link: string
+- amazon_affiliate_link: string (required)
 - genre: string (broad, e.g., "Fantasy")
-- sub_genre: string[] (e.g., ["Romantasy", "Epic Fantasy"])
-- content_tags: object { spice_level: 1-5, mature_themes: boolean, tags: string[] }
+- sub_genres: string[] (e.g., ["Romantasy", "Epic Fantasy"])
+- spice_level: integer (0-3, see Spice Level Scale below)
+- mature_themes: boolean
+- content_tags: string[] (tropes, themes)
 - series_name: string (nullable)
 - series_order: integer (nullable)
+- is_published: boolean (default false)
 - created_at: timestamp
 - updated_at: timestamp
 
+**Spice Level Scale**
+| Level | Label | Description |
+|-------|-------|-------------|
+| 0 | Clean | No spicy content, fade to black or less |
+| 1 | Mild | Light steam, closed door with tension |
+| 2 | Moderate | Open door, some explicit scenes |
+| 3 | Spicy | Explicit content throughout |
+
 **Character**
 - id: UUID (primary key)
-- book_id: UUID (foreign key → Book, first appearance)
-- name: string
+- book_id: UUID (foreign key → Book, required, NOT NULL)
+- name: string (required)
+- gender: string (default 'male', enum: male/female/non-binary/other)
 - traits: string[] (e.g., ["Mysterious", "Protective", "Witty"])
 - hobbies: string[]
 - occupation: string
 - prompts: object[] (e.g., [{ prompt: "The way to win me over is...", answer: "..." }])
-- profile_image_url: string (vibe/POV image, no face)
+- images: object[] (e.g., [{ url: "...", is_primary: true, sort_order: 0 }]) - 1 primary + up to 2 additional images, uploaded to Supabase Storage
+- is_published: boolean (default false)
+- is_deleted: boolean (default false) - soft delete flag
+- deleted_at: timestamp (nullable) - when soft deleted
 - created_at: timestamp
 - updated_at: timestamp
 
-**User** (optional accounts)
-- id: UUID (primary key)
-- email: string (unique)
-- password_hash: string
+**User Profile** (extends Supabase auth.users)
+- id: UUID (primary key, references auth.users)
 - genre_preferences: string[]
+- prefers_spicy: boolean (null = no preference)
+- is_admin: boolean (default false)
 - created_at: timestamp
 - updated_at: timestamp
+
+> **Note:** Email is NOT stored in user_profiles. Access via auth.users join to avoid duplication.
 
 **UserMatch** (saved matches / chat log)
 - id: UUID (primary key)
 - user_id: UUID (foreign key → User)
 - character_id: UUID (foreign key → Character)
 - created_at: timestamp
+- UNIQUE(user_id, character_id)
 
 **UserPass** (bootycall section)
 - id: UUID (primary key)
 - user_id: UUID (foreign key → User)
 - character_id: UUID (foreign key → Character)
 - created_at: timestamp
+- UNIQUE(user_id, character_id)
 
-**UserReadBook** (already read, excluded from pool)
+**UserReadBook** (already read, for user reference)
 - id: UUID (primary key)
 - user_id: UUID (foreign key → User)
 - book_id: UUID (foreign key → Book)
 - created_at: timestamp
+- UNIQUE(user_id, book_id)
+
+### Guest User State (localStorage)
+
+For users without accounts, state is stored in browser localStorage:
+
+```typescript
+interface GuestState {
+  visitorId: string;              // Generated UUID for this browser
+  genrePreferences: string[];     // Selected genre tags
+  prefersSpicy: boolean | null;   // null = no preference
+  matchedCharacterIds: string[];  // Swiped right → Chat Log
+  passedCharacterIds: string[];   // Swiped left → Bootycall
+  readBookIds: string[];          // Marked as already read
+  currentCharacterId: string | null; // Character user was viewing (for resume)
+  lastVisit: string;              // ISO timestamp for "welcome back"
+}
+```
+
+**Key Design Decision:** We do NOT track "seen" characters separately. A character is only considered "seen" when the user actually swipes on it (matched or passed). Characters that were pre-fetched but not swiped on are not tracked - if the user leaves and returns, they may see those characters again, which is acceptable behavior.
+
+**Behavior:**
+- Data persists until browser data is cleared
+- Private/Incognito: Data lost on browser close (accepted limitation)
+- On account creation: localStorage data migrates to database, then cleared
+- On return visit: Resume from `currentCharacterId` if available
 
 ### Data Requirements
 
@@ -179,7 +234,89 @@ Generated: 2026-02-19
 - **Deletion:** Users can request full data deletion via Profile settings
 - **Anonymous users:** Store state in localStorage until account creation
 
-## 6. Technical Architecture
+## 6. Matching Algorithm
+
+### Overview
+
+Characters are shown semi-randomly with priority given to user preferences. This mimics dating app matching while ensuring variety and discovery.
+
+### Algorithm: Batched Weighted Selection
+
+**Ratio:** 70% preferred / 30% discovery
+
+For each batch of 10 characters:
+- 7 characters from preferred genres/spice level (random selection)
+- 3 characters from other genres (random discovery)
+- Shuffle the 10 together
+
+### Preference Matching
+
+**Genre matching:**
+- User selects genre preferences in onboarding
+- Characters from books matching those genres are prioritized
+- No preferences = pure random selection (all genres equal)
+
+**Spice matching (soft filter):**
+- If user prefers spicy: prioritize characters from books with spice_level >= 2
+- If user prefers non-spicy: prioritize characters from books with spice_level <= 1
+- No preference: show all spice levels equally
+- This is a SOFT preference, not a hard filter - users still see variety
+
+### Exclusion Rules
+
+Characters are excluded from the fetch if:
+1. Character is in user's `matchedCharacterIds` (already matched/swiped right)
+2. Character is in user's `passedCharacterIds` (already passed/swiped left)
+3. Character's `is_published` = false
+4. Character's book `is_published` = false
+
+**Note:** Characters from "already read" books are NOT excluded. Users may want to see other character profiles from books they've read for fun.
+
+**Note:** We do NOT track "seen" separately. A character is only excluded once the user actually swipes on it. Pre-fetched characters that weren't swiped on may reappear on the next session - this is intentional and acceptable UX.
+
+### Pre-fetching Strategy
+
+To ensure smooth swiping without loading delays:
+
+```
+Initial load: Fetch 10 characters into pool (React state)
+User swipes through pool...
+When user reaches index 7 (threshold):
+  → Background fetch next 10 characters
+  → Exclude: [...matchedCharacterIds, ...passedCharacterIds, ...currentPoolIds]
+  → Append to pool
+User never waits for loading
+```
+
+The pool exists only in React state (not persisted). On page refresh or return visit:
+- Matched/passed characters are restored from localStorage
+- A fresh pool is fetched (excluding matched + passed)
+- `currentCharacterId` is used to resume if available
+
+### Resume on Return
+
+When user returns to the app:
+1. Check `currentCharacterId` in localStorage
+2. If exists and character is still published:
+   - Fetch that character first
+   - Place at front of new pool
+   - User resumes where they left off
+3. If not available (deleted/unpublished):
+   - Start with fresh pool
+
+### Reset Behavior
+
+When user has swiped through all available characters:
+1. Show "No more characters" message
+2. Offer "Reset & Discover Again" option
+3. On reset:
+   - Clear `passedCharacterIds` (Bootycall emptied)
+   - Keep `matchedCharacterIds` intact (Chat Log preserved)
+   - Clear `currentCharacterId`
+   - Matched characters still excluded from new pool
+4. User can re-swipe on previously passed characters
+
+## 7. Technical Architecture
 
 ### Recommended Stack
 
@@ -201,12 +338,12 @@ Generated: 2026-02-19
 
 ### Non-Functional Requirements
 
-- **Performance:** Fast swipe interactions, images optimized for mobile
+- **Performance:** Fast swipe interactions, images optimized for mobile, pre-fetching for seamless experience
 - **Scalability:** 100 users initially, Supabase free tier sufficient
 - **Security:** Supabase RLS for data access, secure auth, no sensitive data exposed
 - **SEO:** Basic meta tags, but primary access is direct/social (not search)
 
-## 7. Design Requirements
+## 8. Design Requirements
 
 - **Style:** Hybrid Tinder/Hinge - simple, clean, prompt-focused
 - **Aesthetic:** TBD (to be determined in prototype/wireframe phase)
@@ -219,7 +356,39 @@ Generated: 2026-02-19
   - Card-based character profiles (exact layout TBD in prototyping)
 - **References:** Tinder (simplicity, swipe UX), Hinge (prompt-focused profiles)
 
-## 8. Project Phases
+### Onboarding Flow
+
+Single-step preference selection after "Get Started":
+
+```
+┌─────────────────────────────────────┐
+│  What are you in the mood for?      │
+│                                     │
+│  [Fantasy] [Romantasy] [Dark]       │
+│  [Sci-Fi] [Paranormal] [Horror]     │
+│  [🌶️ Spicy]                         │
+│                                     │
+│  Select all that apply, or skip     │
+│  to see everything                  │
+│                                     │
+│         [ Start Swiping ]           │
+│         [ Skip for now ]            │
+└─────────────────────────────────────┘
+```
+
+- Genre tags and "Spicy" are all selectable chips
+- Multi-select allowed
+- Skip = no preferences = random selection
+- Preferences can be changed later in Profile
+
+### Sign-up Prompting
+
+- **First prompt:** After 5 matches
+- **Message:** "You've got 5 matches! Sign up to save them forever"
+- **Frequency:** Once after first 5 matches (TBD for additional prompts)
+- **Style:** Dismissible modal with "Maybe later" option
+
+## 9. Project Phases
 
 ### Phase 1: MVP
 
@@ -228,10 +397,11 @@ Generated: 2026-02-19
 - Character profiles (name, traits, hobbies, occupation, prompts, image)
 - Book reveal on match
 - Genre filter (broad fantasy)
-- Content tags (spice level, mature themes)
+- Content tags (spice level 0-3, mature themes)
 - Saved matches (Chat Log)
 - Bootycall section with "Already Read" action
 - Optional user accounts
+- Guest state persistence (localStorage)
 - Admin panel for content management
 - Amazon affiliate links
 - 20 books, ~30-50 characters
@@ -257,7 +427,7 @@ Generated: 2026-02-19
 
 **Target:** After validating core concept
 
-## 9. Open Questions
+## 10. Open Questions
 
 - [x] **Character images:** Stock photos with POV/aesthetic shots (no faces). Free, legally safe, can upgrade later if too generic. **DECIDED**
 - [x] **IP/Copyright:** Low risk - transformative use, promotes sales. Add disclaimer + DMCA removal process. **DECIDED** (see Section 11)
@@ -266,8 +436,14 @@ Generated: 2026-02-19
 - [ ] **User acquisition strategy:** How to get first 100 users? BookTok, Reddit, book clubs?
 - [ ] **Analytics setup:** Which tool to use for tracking conversions and user behavior?
 - [ ] **Content contributor model:** If added later, who owns submitted content? Can they remove it?
+- [x] **Matching algorithm:** 70/30 weighted random with genre priority. **DECIDED**
+- [x] **Guest user state:** localStorage with migration on signup. **DECIDED**
+- [x] **Spice level scale:** 0-3 (clean/mild/moderate/spicy). **DECIDED**
+- [x] **Sign-up prompting:** After 5 matches, once for now. **DECIDED**
+- [x] **Seen vs swiped tracking:** Only track matched/passed (actual swipes), not "seen". Pre-fetched but unswiped characters may reappear. **DECIDED**
+- [x] **Resume on return:** Store `currentCharacterId` in localStorage to resume where user left off. **DECIDED**
 
-## 10. Legal & Compliance
+## 11. Legal & Compliance
 
 ### IP/Copyright Strategy
 
@@ -322,7 +498,7 @@ Generated: 2026-02-19
 - [ ] Sign up for Amazon Associates program
 - [ ] Test affiliate links are working
 
-## 11. Out of Scope
+## 12. Out of Scope
 
 Items explicitly NOT included in this project:
 

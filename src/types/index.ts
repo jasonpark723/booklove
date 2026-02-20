@@ -15,6 +15,7 @@ export type {
   CharacterWithBook,
   CharacterFormData,
   CharacterPrompt,
+  CharacterImage,
   Gender,
 } from './character';
 

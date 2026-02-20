@@ -94,8 +94,10 @@ export interface Database {
           hobbies: string[]
           occupation: string | null
           prompts: Json
-          profile_image_url: string | null
+          images: Json
           is_published: boolean
+          is_deleted: boolean
+          deleted_at: string | null
           created_at: string
           updated_at: string
         }
@@ -108,8 +110,10 @@ export interface Database {
           hobbies?: string[]
           occupation?: string | null
           prompts?: Json
-          profile_image_url?: string | null
+          images?: Json
           is_published?: boolean
+          is_deleted?: boolean
+          deleted_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -122,8 +126,10 @@ export interface Database {
           hobbies?: string[]
           occupation?: string | null
           prompts?: Json
-          profile_image_url?: string | null
+          images?: Json
           is_published?: boolean
+          is_deleted?: boolean
+          deleted_at?: string | null
           created_at?: string
           updated_at?: string
         }
