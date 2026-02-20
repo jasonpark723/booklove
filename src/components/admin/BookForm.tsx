@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { Upload, Link, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils/cn';
 import {
@@ -9,7 +10,9 @@ import {
   updateBook,
   getTags,
   createTag,
-  checkDuplicateAmazonLink
+  checkDuplicateAmazonLink,
+  uploadBookCover,
+  deleteBookCover,
 } from '@/lib/actions/books';
 import type { Book, BookFormData, Tag, SpiceLevel, Genre } from '@/types';
 import { GENRES, SPICE_LABELS } from '@/types';
@@ -47,6 +50,14 @@ export function BookForm({ book, mode }: BookFormProps) {
   const [tagSearch, setTagSearch] = useState('');
   const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
   const [isCreatingTag, setIsCreatingTag] = useState(false);
+
+  // Cover image upload state
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [coverUploadError, setCoverUploadError] = useState<string | null>(null);
+  const [isAddingCoverUrl, setIsAddingCoverUrl] = useState(false);
+  const [coverUrlInput, setCoverUrlInput] = useState('');
+  const coverFileInputRef = useRef<HTMLInputElement>(null);
+  const [oldCoverUrl, setOldCoverUrl] = useState<string | null>(null);
 
   // Load initial data
   useEffect(() => {
@@ -166,6 +177,56 @@ export function BookForm({ book, mode }: BookFormProps) {
       !formData.tags.includes(tag.name)
   );
 
+  // Cover image handlers
+  const handleCoverFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingCover(true);
+    setCoverUploadError(null);
+
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', file);
+
+    const result = await uploadBookCover(uploadFormData);
+
+    setIsUploadingCover(false);
+
+    if (result.success) {
+      // Track old URL for cleanup
+      if (formData.cover_image_url && formData.cover_image_url.includes('book-covers')) {
+        setOldCoverUrl(formData.cover_image_url);
+      }
+      setFormData(prev => ({ ...prev, cover_image_url: result.url }));
+    } else {
+      setCoverUploadError(result.error);
+    }
+
+    // Reset file input
+    if (coverFileInputRef.current) {
+      coverFileInputRef.current.value = '';
+    }
+  };
+
+  const handleCoverUrlAdd = () => {
+    if (!coverUrlInput.trim()) return;
+    // Track old URL for cleanup
+    if (formData.cover_image_url && formData.cover_image_url.includes('book-covers')) {
+      setOldCoverUrl(formData.cover_image_url);
+    }
+    setFormData(prev => ({ ...prev, cover_image_url: coverUrlInput.trim() }));
+    setCoverUrlInput('');
+    setIsAddingCoverUrl(false);
+  };
+
+  const handleCoverRemove = () => {
+    // Track URL for cleanup
+    if (formData.cover_image_url && formData.cover_image_url.includes('book-covers')) {
+      setOldCoverUrl(formData.cover_image_url);
+    }
+    setFormData(prev => ({ ...prev, cover_image_url: '' }));
+  };
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -216,6 +277,12 @@ export function BookForm({ book, mode }: BookFormProps) {
     setIsSubmitting(false);
 
     if (result.success) {
+      // Clean up old cover image if it was replaced
+      if (oldCoverUrl) {
+        deleteBookCover(oldCoverUrl).catch(() => {
+          // Silently ignore cleanup errors
+        });
+      }
       router.push('/admin/books');
     } else {
       setSubmitError(result.error);
@@ -271,28 +338,152 @@ export function BookForm({ book, mode }: BookFormProps) {
         />
       </FormField>
 
-      {/* Cover Image URL */}
-      <FormField label="Cover Image URL" error={errors.cover_image_url}>
-        <input
-          type="url"
-          name="cover_image_url"
-          value={formData.cover_image_url}
-          onChange={handleChange}
-          className={cn(inputStyles, errors.cover_image_url && 'border-red-500')}
-          placeholder="https://example.com/cover.jpg"
-        />
-        {formData.cover_image_url && isValidUrl(formData.cover_image_url) && (
-          <div className="mt-2">
-            <img
-              src={formData.cover_image_url}
-              alt="Cover preview"
-              className="w-32 h-48 object-cover rounded-lg border"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-          </div>
-        )}
+      {/* Cover Image */}
+      <FormField label="Cover Image" error={errors.cover_image_url || coverUploadError || undefined}>
+        <div className="space-y-3">
+          {/* Current cover preview */}
+          {formData.cover_image_url && isValidUrl(formData.cover_image_url) && (
+            <div className="relative inline-block group">
+              <img
+                src={formData.cover_image_url}
+                alt="Cover preview"
+                className="w-32 h-48 object-cover rounded-lg border"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleCoverRemove}
+                className="absolute -top-2 -right-2 p-1 bg-white rounded-full shadow-md border hover:bg-red-50 transition-colors"
+                title="Remove cover"
+              >
+                <X className="w-4 h-4 text-red-500" />
+              </button>
+            </div>
+          )}
+
+          {/* Upload/URL input options */}
+          {!formData.cover_image_url && (
+            <>
+              {isAddingCoverUrl ? (
+                <div className="p-4 border border-dashed border-gray-300 rounded-lg space-y-3">
+                  <input
+                    type="url"
+                    value={coverUrlInput}
+                    onChange={(e) => setCoverUrlInput(e.target.value)}
+                    placeholder="Enter image URL..."
+                    className={inputStyles}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="sm"
+                      onClick={handleCoverUrlAdd}
+                      disabled={!coverUrlInput.trim()}
+                    >
+                      Add URL
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setIsAddingCoverUrl(false);
+                        setCoverUrlInput('');
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-3">
+                  <input
+                    ref={coverFileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleCoverFileSelect}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => coverFileInputRef.current?.click()}
+                    disabled={isUploadingCover}
+                    className={cn(
+                      'flex-1 p-4 border border-dashed border-gray-300 rounded-lg text-gray-500',
+                      'hover:border-pink-300 hover:text-pink-500 transition-colors',
+                      'flex items-center justify-center gap-2',
+                      isUploadingCover && 'opacity-50 cursor-not-allowed'
+                    )}
+                  >
+                    {isUploadingCover ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        Upload Cover
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingCoverUrl(true)}
+                    className="flex-1 p-4 border border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-pink-300 hover:text-pink-500 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Link className="w-4 h-4" />
+                    Paste URL
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Replace option when cover exists */}
+          {formData.cover_image_url && (
+            <div className="flex gap-2">
+              <input
+                ref={coverFileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleCoverFileSelect}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => coverFileInputRef.current?.click()}
+                disabled={isUploadingCover}
+              >
+                {isUploadingCover ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-1" />
+                    Replace
+                  </>
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsAddingCoverUrl(true)}
+              >
+                <Link className="w-4 h-4 mr-1" />
+                Use URL
+              </Button>
+            </div>
+          )}
+        </div>
       </FormField>
 
       {/* Amazon Affiliate Link */}

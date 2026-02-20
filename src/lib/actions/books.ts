@@ -370,3 +370,95 @@ export async function searchTags(query: string): Promise<TagsResult> {
     return { success: false, error: 'Failed to search tags' };
   }
 }
+
+// ============================================
+// BOOK COVER IMAGE OPERATIONS
+// ============================================
+
+export type UploadResult =
+  | { success: true; url: string }
+  | { success: false; error: string };
+
+/**
+ * Upload book cover image to Supabase Storage
+ */
+export async function uploadBookCover(formData: FormData): Promise<UploadResult> {
+  try {
+    const supabase = await createServerClient();
+    const file = formData.get('file') as File;
+
+    if (!file) {
+      return { success: false, error: 'No file provided' };
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      return { success: false, error: 'Invalid file type. Allowed: JPEG, PNG, WebP' };
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return { success: false, error: 'File too large. Maximum size is 5MB' };
+    }
+
+    // Generate unique filename
+    const ext = file.name.split('.').pop();
+    const filename = `${crypto.randomUUID()}.${ext}`;
+    const path = `covers/${filename}`;
+
+    // Upload to Supabase Storage
+    const { error } = await supabase.storage
+      .from('book-covers')
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    // Get public URL
+    const { data: publicUrlData } = supabase.storage
+      .from('book-covers')
+      .getPublicUrl(path);
+
+    return { success: true, url: publicUrlData.publicUrl };
+  } catch (err) {
+    return { success: false, error: 'Failed to upload image' };
+  }
+}
+
+/**
+ * Delete book cover image from Supabase Storage
+ */
+export async function deleteBookCover(imageUrl: string): Promise<DeleteResult> {
+  try {
+    const supabase = await createServerClient();
+
+    // Extract path from URL
+    const url = new URL(imageUrl);
+    const pathMatch = url.pathname.match(/book-covers\/(.+)$/);
+
+    if (!pathMatch) {
+      // Not a storage URL, nothing to delete
+      return { success: true };
+    }
+
+    const path = pathMatch[1];
+
+    const { error } = await supabase.storage
+      .from('book-covers')
+      .remove([path]);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: 'Failed to delete image' };
+  }
+}
