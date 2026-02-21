@@ -1,2 +1,2 @@
 // Navigation components
-// Export navigation components here as they are created
+export { BottomNav } from './BottomNav';

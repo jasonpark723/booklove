@@ -1,2 +1,5 @@
 // Card components (character, book)
-// Export card components here as they are created
+export { CharacterCard } from './CharacterCard';
+export { TraitBadge } from './TraitBadge';
+export { PromptCard } from './PromptCard';
+export { SpiceIndicator } from './SpiceIndicator';
