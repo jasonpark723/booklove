@@ -212,6 +212,14 @@ export function handleReset(): GuestState | null {
   });
 }
 
+export function handleResetAll(): GuestState | null {
+  return updateGuestState({
+    matchedCharacterIds: [],
+    passedCharacterIds: [],
+    currentCharacterId: null,
+  });
+}
+
 export function handleDismissSignupPrompt(): GuestState | null {
   return updateGuestState({
     signupPromptDismissed: true,
