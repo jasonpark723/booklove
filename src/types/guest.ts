@@ -9,6 +9,7 @@ export interface GuestState {
   readBookIds: string[];
   currentCharacterId: string | null; // For resume functionality
   lastVisit: string;
+  signupPromptDismissed: boolean;
 }
 
 export const GUEST_STORAGE_KEY = 'booklove_guest';
@@ -24,5 +25,6 @@ export function createInitialGuestState(visitorId: string): GuestState {
     readBookIds: [],
     currentCharacterId: null,
     lastVisit: new Date().toISOString(),
+    signupPromptDismissed: false,
   };
 }

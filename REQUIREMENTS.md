@@ -56,8 +56,8 @@ Last Updated: 2026-02-19
 | Genre Filter | Filter characters by fantasy sub-genre | As a reader, I want to filter by sub-genre so I see relevant characters | P0 |
 | Content Tags | Spice level (0-3), mature themes indicators | As a reader, I want to know content intensity so I can choose appropriately | P0 |
 | Saved Matches (Chat Log) | List of matched characters/books | As a reader, I want to save my matches so I can revisit them later | P0 |
-| Bootycall Section | Pile of passed characters that can be revisited | As a reader, I want to revisit passed characters so nothing is permanently lost | P0 |
-| "Already Read" Action | In bootycall section, remove book + all its characters from pool | As a reader, I want to mark books I've read so I don't see those characters again | P0 |
+| Pass Pile (name TBD: "The Slow Burn Shelf" or "The Maybe Pile") | Pile of passed characters that can be revisited | As a reader, I want to revisit passed characters so nothing is permanently lost | P0 |
+| "Already Read" Action | In pass pile, remove book + all its characters from pool | As a reader, I want to mark books I've read so I don't see those characters again | P0 |
 | Optional Account | Email/password auth to save progress, prevent repeat profiles | As a reader, I want to optionally create an account so my progress is saved | P1 |
 | Admin Panel | CRUD for books and character profiles | As an admin, I want to manage content so I can curate the experience | P0 |
 | Amazon Affiliate Links | Properly formatted affiliate links for each book | As the owner, I want affiliate links so I can monetize the platform | P0 |
@@ -84,12 +84,12 @@ Last Updated: 2026-02-19
 4. Sees first character card (name, traits, hobbies, occupation, prompts, vibe image)
 5. Swipes right (interested) → Book reveal appears (cover, title, description, content tags, affiliate link)
 6. User can: Purchase on Amazon | Save to Chat Log | Continue Swiping
-7. Swipes left (not interested) → Character goes to Bootycall section
+7. Swipes left (not interested) → Character goes to Pass Pile
 8. Continues swiping through characters
 
 ### Workflow 2: Revisiting Passed Characters
 
-1. User opens Bootycall section from bottom nav
+1. User opens Pass Pile (name TBD) from bottom nav
 2. Browses previously passed characters
 3. Can swipe right to match (reveals book)
 4. Can tap "Already Read" to remove book from read pool (characters from same book/series still visible for fun browsing)
@@ -120,7 +120,7 @@ Last Updated: 2026-02-19
 
 1. User has swiped through all available characters
 2. System shows "No more characters" with option to reset
-3. Reset clears passed characters (Bootycall) back to pool
+3. Reset clears passed characters (Pass Pile) back to pool
 4. Matched characters remain in Chat Log and are NOT shown again
 5. User can continue swiping on previously passed characters
 
@@ -310,7 +310,7 @@ When user has swiped through all available characters:
 1. Show "No more characters" message
 2. Offer "Reset & Discover Again" option
 3. On reset:
-   - Clear `passedCharacterIds` (Bootycall emptied)
+   - Clear `passedCharacterIds` (Pass Pile emptied)
    - Keep `matchedCharacterIds` intact (Chat Log preserved)
    - Clear `currentCharacterId`
    - Matched characters still excluded from new pool
@@ -352,7 +352,7 @@ When user has swiped through all available characters:
 - **Accessibility:** TBD (baseline: readable fonts, sufficient contrast)
 - **UI Patterns:**
   - Swipe animations on cards
-  - Bottom navigation: Discover | Chat Log | Bootycalls | Profile
+  - Bottom navigation: Discover | Chat Log | Pass Pile (name TBD) | Profile
   - Card-based character profiles (exact layout TBD in prototyping)
 - **References:** Tinder (simplicity, swipe UX), Hinge (prompt-focused profiles)
 
@@ -383,9 +383,9 @@ Single-step preference selection after "Get Started":
 
 ### Sign-up Prompting
 
-- **First prompt:** After 5 matches
-- **Message:** "You've got 5 matches! Sign up to save them forever"
-- **Frequency:** Once after first 5 matches (TBD for additional prompts)
+- **First prompt:** After 3 matches
+- **Message:** "You've got 3 matches! Sign up to save them forever"
+- **Frequency:** Once after first 3 matches (TBD for additional prompts)
 - **Style:** Dismissible modal with "Maybe later" option
 
 ## 9. Project Phases
@@ -399,7 +399,7 @@ Single-step preference selection after "Get Started":
 - Genre filter (broad fantasy)
 - Content tags (spice level 0-3, mature themes)
 - Saved matches (Chat Log)
-- Bootycall section with "Already Read" action
+- Pass Pile (name TBD: "The Slow Burn Shelf" or "The Maybe Pile") with "Already Read" action
 - Optional user accounts
 - Guest state persistence (localStorage)
 - Admin panel for content management
@@ -439,9 +439,10 @@ Single-step preference selection after "Get Started":
 - [x] **Matching algorithm:** 70/30 weighted random with genre priority. **DECIDED**
 - [x] **Guest user state:** localStorage with migration on signup. **DECIDED**
 - [x] **Spice level scale:** 0-3 (clean/mild/moderate/spicy). **DECIDED**
-- [x] **Sign-up prompting:** After 5 matches, once for now. **DECIDED**
+- [x] **Sign-up prompting:** After 3 matches, once for now. **DECIDED**
 - [x] **Seen vs swiped tracking:** Only track matched/passed (actual swipes), not "seen". Pre-fetched but unswiped characters may reappear. **DECIDED**
 - [x] **Resume on return:** Store `currentCharacterId` in localStorage to resume where user left off. **DECIDED**
+- [ ] **Pass pile naming:** "The Slow Burn Shelf" or "The Maybe Pile" - TBD
 
 ## 11. Legal & Compliance
 

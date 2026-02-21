@@ -1,4 +1,5 @@
 import { BottomNav } from '@/components/navigation';
+import { UserProvider } from '@/context/UserContext';
 
 export default function ReaderLayout({
   children,
@@ -6,11 +7,13 @@ export default function ReaderLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="max-w-[428px] mx-auto">
-        {children}
+    <UserProvider>
+      <div className="min-h-screen bg-background pb-20">
+        <div className="max-w-[428px] mx-auto">
+          {children}
+        </div>
+        <BottomNav />
       </div>
-      <BottomNav />
-    </div>
+    </UserProvider>
   );
 }
