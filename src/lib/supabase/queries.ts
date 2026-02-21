@@ -33,6 +33,7 @@ export async function getPublishedCharacters(
       book:books!inner(*)
     `)
     .eq('is_published', true)
+    .eq('is_deleted', false)
     .eq('books.is_published', true)
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
@@ -147,6 +148,7 @@ export async function getCharactersByBookId(
     .select('*')
     .eq('book_id', bookId)
     .eq('is_published', true)
+    .eq('is_deleted', false)
     .order('name');
 
   if (error) {
@@ -169,7 +171,8 @@ export async function countPublishedCharacters(options: {
   let query = supabase
     .from('characters')
     .select('id', { count: 'exact', head: true })
-    .eq('is_published', true);
+    .eq('is_published', true)
+    .eq('is_deleted', false);
 
   if (excludeIds.length > 0) {
     query = query.not('id', 'in', `(${excludeIds.join(',')})`);

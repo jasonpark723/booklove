@@ -88,6 +88,7 @@ export default function DiscoverPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentCharacter?.id]);
 
+
   const handlePass = useCallback(() => {
     if (!currentCharacter || exitDirection) return;
 
@@ -166,9 +167,8 @@ export default function DiscoverPage() {
     setShowEmptyState(false);
     setShowLoadingCard(false);
     resetAll();
-    // Refetch characters after reset
-    setTimeout(() => refetch(), 100);
-  }, [resetAll, refetch]);
+    // useCharacters will auto-refetch when excludeIds changes
+  }, [resetAll]);
 
   const handleRetry = useCallback(() => {
     refetch();

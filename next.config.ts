@@ -10,19 +10,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'picsum.photos',
-      },
-      {
-        protocol: 'https',
-        hostname: 'resizing.flixster.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'ktkkmtvaqgkkeqvvadpi.supabase.co',
-      },
-      {
-        protocol: 'https',
-        hostname: 'm.media-amazon.com',
+        hostname: '**',
       },
     ],
   },
