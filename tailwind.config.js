@@ -45,6 +45,7 @@ module.exports = {
         'fade-slide-up': 'fadeSlideUp 0.5s ease-out both',
         'chili-bounce': 'chiliBounce 0.4s ease-in-out',
         'badge-pulse': 'badgePulse 2s ease-in-out infinite',
+        'confetti-fall': 'confettiFall 2.5s ease-in-out infinite',
       },
       keyframes: {
         heartPulse: {
@@ -67,6 +68,12 @@ module.exports = {
         badgePulse: {
           '0%, 100%': { boxShadow: '0 0 0 0 rgba(244, 114, 182, 0.4)' },
           '50%': { boxShadow: '0 0 0 8px rgba(244, 114, 182, 0)' },
+        },
+        confettiFall: {
+          '0%': { transform: 'translateY(-10px) rotate(0deg)', opacity: '0' },
+          '10%': { opacity: '1' },
+          '90%': { opacity: '1' },
+          '100%': { transform: 'translateY(400px) rotate(720deg)', opacity: '0' },
         },
       },
       transitionTimingFunction: {

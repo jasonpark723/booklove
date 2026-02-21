@@ -14,6 +14,7 @@ import {
   handleRemoveMatch as guestHandleRemoveMatch,
   handleRemovePass as guestHandleRemovePass,
   handleReset as guestHandleReset,
+  handleResetAll as guestHandleResetAll,
   handleDismissSignupPrompt as guestHandleDismissSignupPrompt,
   handleSetPreferences as guestHandleSetPreferences,
 } from '@/lib/guestState';
@@ -30,6 +31,7 @@ interface UseGuestStateReturn {
   removeMatch: (characterId: string) => void;
   removePass: (characterId: string) => void;
   resetPasses: () => void;
+  resetAll: () => void;
   dismissSignupPrompt: () => void;
   setPreferences: (genres: string[], prefersSpicy: boolean | null) => void;
   setCurrentCharacter: (characterId: string | null) => void;
@@ -96,6 +98,11 @@ export function useGuestState(): UseGuestStateReturn {
     if (updated) setGuestState(updated);
   }, []);
 
+  const resetAll = useCallback(() => {
+    const updated = guestHandleResetAll();
+    if (updated) setGuestState(updated);
+  }, []);
+
   const dismissSignupPrompt = useCallback(() => {
     const updated = guestHandleDismissSignupPrompt();
     if (updated) setGuestState(updated);
@@ -138,6 +145,7 @@ export function useGuestState(): UseGuestStateReturn {
     removeMatch,
     removePass,
     resetPasses,
+    resetAll,
     dismissSignupPrompt,
     setPreferences,
     setCurrentCharacter,

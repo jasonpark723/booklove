@@ -9,17 +9,9 @@ import type { CharacterWithBook, CharacterImage } from '@/types/character';
 
 interface CharacterCardProps {
   character: CharacterWithBook;
-  onLike?: () => void;
-  onPass?: () => void;
   onPromptLike?: (promptIndex: number) => void;
   className?: string;
 }
-
-const HeartIcon = () => (
-  <svg viewBox="0 0 24 24" className="w-[26px] h-[26px] fill-white">
-    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-  </svg>
-);
 
 function getPrimaryImage(images: CharacterImage[]): string | null {
   const primary = images.find((img) => img.is_primary);
@@ -37,8 +29,6 @@ function getSecondaryImages(images: CharacterImage[]): CharacterImage[] {
 
 export function CharacterCard({
   character,
-  onLike,
-  onPass,
   onPromptLike,
   className,
 }: CharacterCardProps) {
@@ -84,23 +74,6 @@ export function CharacterCard({
             )}
           </div>
 
-          {/* Heart Button */}
-          {onLike && (
-            <button
-              onClick={onLike}
-              className={cn(
-                'absolute bottom-6 right-5 w-[52px] h-[52px]',
-                'bg-gradient-to-br from-primary to-primary-warm rounded-full',
-                'flex items-center justify-center cursor-pointer',
-                'shadow-heart transition-all duration-300 ease-bouncy',
-                'hover:scale-[1.12] hover:-rotate-[5deg]',
-                'active:scale-95'
-              )}
-              aria-label="Like character"
-            >
-              <HeartIcon />
-            </button>
-          )}
         </div>
 
         {/* Trait Tags */}
@@ -165,10 +138,6 @@ export function CharacterCard({
         </div>
       )}
 
-      {/* Swipe Hint */}
-      <div className="text-center py-6 text-text-muted text-sm font-semibold">
-        ← Swipe to pass · Swipe to like →
-      </div>
     </div>
   );
 }
