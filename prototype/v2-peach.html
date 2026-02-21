@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BookLove v2 - Peach (Warm Blush)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #F472B6;
+      --primary-warm: #FB7185;
+      --primary-light: #FECDD3;
+      --background: #FFF5F5;
+      --surface: #FFFFFF;
+      --text: #9D174D;
+      --text-muted: #BE185D;
+      --accent: #DB2777;
+      --peach: #FFEDD5;
+      --like: #10B981;
+      --pass: #EF4444;
+      --border-radius: 20px;
+      --shadow: 0 6px 24px rgba(244, 114, 182, 0.15);
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--background);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Theme Header */
+    .theme-header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-warm), #FDBA74);
+      color: white;
+      padding: 12px 20px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* App Container */
+    .app-container {
+      max-width: 428px;
+      margin: 0 auto;
+      background: var(--background);
+      min-height: 100vh;
+      position: relative;
+      padding-bottom: 80px;
+    }
+
+    /* Screen Tabs */
+    .screen-tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--primary-light);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .screen-tab {
+      flex: 1;
+      padding: 14px 8px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      border: none;
+      background: none;
+      transition: all 0.2s;
+    }
+
+    .screen-tab.active {
+      color: var(--primary);
+      border-bottom: 3px solid var(--primary);
+    }
+
+    /* Screens */
+    .screen {
+      display: none;
+      padding: 16px;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* Character Card */
+    .character-card {
+      background: var(--surface);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 16px;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .character-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .character-image {
+      width: 100%;
+      height: 500px;
+      object-fit: cover;
+      position: relative;
+    }
+
+    .character-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .image-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(157, 23, 77, 0.88));
+      padding: 60px 20px 24px;
+      color: white;
+    }
+
+    .character-name {
+      font-size: 30px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .character-occupation {
+      font-size: 16px;
+      opacity: 0.95;
+      font-weight: 600;
+    }
+
+    .heart-button {
+      position: absolute;
+      bottom: 24px;
+      right: 20px;
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-warm));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+      box-shadow: 0 8px 24px rgba(244, 114, 182, 0.45);
+    }
+
+    .heart-button:hover {
+      transform: scale(1.12) rotate(-5deg);
+    }
+
+    .heart-button:active {
+      transform: scale(0.95);
+    }
+
+    .heart-button svg {
+      width: 26px;
+      height: 26px;
+      fill: white;
+    }
+
+    /* Prompt Card */
+    .prompt-card {
+      background: var(--surface);
+      border-radius: var(--border-radius);
+      padding: 22px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow);
+      position: relative;
+      border-left: 4px solid var(--primary-light);
+      transition: transform 0.2s ease, border-color 0.2s;
+    }
+
+    .prompt-card:hover {
+      transform: translateX(4px);
+      border-left-color: var(--primary);
+    }
+
+    .prompt-label {
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .prompt-answer {
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.45;
+      color: var(--text);
+    }
+
+    .prompt-heart {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary-light), var(--peach));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .prompt-heart:hover {
+      background: linear-gradient(135deg, var(--primary), var(--primary-warm));
+      transform: scale(1.15) rotate(10deg);
+    }
+
+    .prompt-heart svg {
+      width: 18px;
+      height: 18px;
+      fill: var(--primary);
+    }
+
+    .prompt-heart:hover svg {
+      fill: white;
+    }
+
+    /* Trait Tags - Gradient Pink Pills */
+    .trait-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 18px 20px;
+    }
+
+    .trait-tag {
+      background: linear-gradient(135deg, var(--primary-light), var(--peach));
+      color: var(--text);
+      padding: 10px 18px;
+      border-radius: 26px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 3px 10px rgba(244, 114, 182, 0.15);
+      transition: transform 0.2s ease;
+    }
+
+    .trait-tag:hover {
+      transform: scale(1.05);
+    }
+
+    /* Spice Indicator - Chili */
+    .spice-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 20px;
+      border-top: 1px solid var(--primary-light);
+      background: linear-gradient(90deg, transparent, rgba(254, 205, 211, 0.3), transparent);
+    }
+
+    .spice-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-right: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .chili {
+      font-size: 22px;
+      transition: transform 0.2s ease;
+    }
+
+    .chili.active {
+      filter: none;
+      animation: chiliBounce 0.4s ease-in-out;
+    }
+
+    @keyframes chiliBounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+
+    .chili.active:hover {
+      transform: scale(1.25) rotate(-10deg);
+    }
+
+    .chili.inactive {
+      filter: grayscale(100%);
+      opacity: 0.2;
+    }
+
+    /* Match Modal with Enhanced Bouncy Animation */
+    .match-screen {
+      text-align: center;
+      padding: 40px 20px;
+      overflow: hidden;
+    }
+
+    .match-confetti {
+      font-size: 32px;
+      margin-bottom: 8px;
+      animation: confettiFall 1s ease-out;
+    }
+
+    @keyframes confettiFall {
+      0% { opacity: 0; transform: translateY(-30px) rotate(-10deg); }
+      100% { opacity: 1; transform: translateY(0) rotate(0); }
+    }
+
+    .match-hearts {
+      font-size: 56px;
+      margin-bottom: 16px;
+      animation: heartPulse 0.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes heartPulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.2); }
+    }
+
+    .match-title {
+      font-size: 36px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--primary-warm));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+      animation: bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes bounceIn {
+      0% { opacity: 0; transform: scale(0.5); }
+      60% { transform: scale(1.1); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .match-subtitle {
+      font-size: 17px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      font-weight: 600;
+      animation: fadeSlideUp 0.5s ease-out 0.2s both;
+    }
+
+    @keyframes fadeSlideUp {
+      0% { opacity: 0; transform: translateY(15px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .match-images {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 32px;
+      animation: fadeSlideUp 0.5s ease-out 0.3s both;
+    }
+
+    .match-character, .match-book {
+      width: 145px;
+      height: 205px;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 16px 40px rgba(244, 114, 182, 0.3);
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      border: 3px solid white;
+    }
+
+    .match-character:hover {
+      transform: scale(1.08) rotate(-4deg);
+    }
+
+    .match-book:hover {
+      transform: scale(1.08) rotate(4deg);
+    }
+
+    .match-character img, .match-book img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .book-info {
+      margin-bottom: 32px;
+      animation: fadeSlideUp 0.5s ease-out 0.4s both;
+    }
+
+    .book-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .book-author {
+      font-size: 16px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .match-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      animation: fadeSlideUp 0.5s ease-out 0.5s both;
+    }
+
+    .match-btn {
+      padding: 18px 36px;
+      border-radius: 30px;
+      font-size: 16px;
+      font-weight: 800;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+    }
+
+    .match-btn:hover {
+      transform: scale(1.04);
+    }
+
+    .match-btn:active {
+      transform: scale(0.97);
+    }
+
+    .match-btn.primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-warm));
+      color: white;
+      box-shadow: 0 8px 24px rgba(244, 114, 182, 0.4);
+    }
+
+    .match-btn.primary:hover {
+      box-shadow: 0 12px 32px rgba(244, 114, 182, 0.5);
+    }
+
+    .match-btn.secondary {
+      background: linear-gradient(135deg, var(--primary-light), var(--peach));
+      color: var(--text);
+    }
+
+    /* Chat List */
+    .chat-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-item {
+      display: flex;
+      align-items: center;
+      padding: 18px;
+      background: var(--surface);
+      border-radius: var(--border-radius);
+      margin-bottom: 12px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease, box-shadow 0.2s;
+    }
+
+    .chat-item:hover {
+      transform: translateX(8px);
+      box-shadow: 0 8px 28px rgba(244, 114, 182, 0.2);
+    }
+
+    .chat-item.passed {
+      opacity: 0.5;
+    }
+
+    .chat-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin-right: 16px;
+      border: 3px solid var(--primary);
+      transition: transform 0.2s;
+    }
+
+    .chat-item:hover .chat-avatar {
+      transform: scale(1.08);
+    }
+
+    .chat-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .chat-info {
+      flex: 1;
+    }
+
+    .chat-name {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+
+    .chat-book {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .chat-meta {
+      text-align: right;
+    }
+
+    .chat-time {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .chat-badge {
+      background: linear-gradient(135deg, var(--primary), var(--primary-warm));
+      color: white;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: 14px;
+      margin-top: 4px;
+      display: inline-block;
+      animation: badgePulse 2s ease-in-out infinite;
+    }
+
+    @keyframes badgePulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(244, 114, 182, 0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(244, 114, 182, 0); }
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 428px;
+      background: var(--surface);
+      display: flex;
+      justify-content: space-around;
+      padding: 14px 0 26px;
+      border-top: 1px solid var(--primary-light);
+      box-shadow: 0 -6px 24px rgba(244, 114, 182, 0.1);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: color 0.2s, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .nav-item:hover {
+      transform: translateY(-3px);
+    }
+
+    .nav-item.active {
+      color: var(--primary);
+    }
+
+    .nav-item svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .nav-label {
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* Swipe Hint */
+    .swipe-hint {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Section Header */
+    .section-header {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="theme-header">v2 Peach - Warm Blush</div>
+
+  <div class="app-container">
+    <!-- Screen Tabs for Demo -->
+    <div class="screen-tabs">
+      <button class="screen-tab active" onclick="showScreen('swipe')">Swipe</button>
+      <button class="screen-tab" onclick="showScreen('match')">Match</button>
+      <button class="screen-tab" onclick="showScreen('matches')">Matches</button>
+      <button class="screen-tab" onclick="showScreen('passed')">Passed</button>
+    </div>
+
+    <!-- Swipe Screen -->
+    <div id="swipe" class="screen active">
+      <div class="character-card">
+        <div class="character-image">
+          <img src="https://picsum.photos/seed/aurora1/400/600" alt="Character">
+          <div class="image-overlay">
+            <div class="character-name">Aurora Winters</div>
+            <div class="character-occupation">Ice Queen Heir</div>
+          </div>
+          <div class="heart-button">
+            <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          </div>
+        </div>
+
+        <div class="trait-tags">
+          <span class="trait-tag">Cold Exterior</span>
+          <span class="trait-tag">Secretly Soft</span>
+          <span class="trait-tag">Protective</span>
+        </div>
+
+        <div class="spice-indicator">
+          <span class="spice-label">Spice Level</span>
+          <span class="chili active">🌶️</span>
+          <span class="chili active">🌶️</span>
+          <span class="chili inactive">🌶️</span>
+        </div>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-label">Don't let the ice fool you</div>
+        <div class="prompt-answer">Behind every cold glare is someone who feels too deeply and hides it even deeper.</div>
+        <div class="prompt-heart">
+          <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </div>
+      </div>
+
+      <div class="character-card">
+        <div class="character-image" style="height: 340px;">
+          <img src="https://picsum.photos/seed/aurora2/400/400" alt="Character">
+        </div>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-label">What melts my walls</div>
+        <div class="prompt-answer">Persistence without pressure. Show up, but give me space to come to you.</div>
+        <div class="prompt-heart">
+          <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </div>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-label">Worth the wait because</div>
+        <div class="prompt-answer">Once I let you in, I'd freeze the world to keep you safe.</div>
+        <div class="prompt-heart">
+          <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </div>
+      </div>
+
+      <div class="swipe-hint">
+        ← Swipe to pass · Swipe to like →
+      </div>
+    </div>
+
+    <!-- Match Screen -->
+    <div id="match" class="screen">
+      <div class="match-screen">
+        <div class="match-confetti">✨🎉✨</div>
+        <div class="match-hearts">💕</div>
+        <div class="match-title">You Matched!</div>
+        <div class="match-subtitle">Aurora Winters wants to meet you</div>
+
+        <div class="match-images">
+          <div class="match-character">
+            <img src="https://picsum.photos/seed/aurora1/300/400" alt="Character">
+          </div>
+          <div class="match-book">
+            <img src="https://picsum.photos/seed/bookpeach/300/400" alt="Book Cover">
+          </div>
+        </div>
+
+        <div class="book-info">
+          <div class="book-title">Frozen Hearts Thaw</div>
+          <div class="book-author">by Melody Frost</div>
+        </div>
+
+        <div class="match-actions">
+          <button class="match-btn primary">See the Book</button>
+          <button class="match-btn secondary">Keep Swiping</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Matches List Screen -->
+    <div id="matches" class="screen">
+      <h2 class="section-header">Your Matches</h2>
+      <div class="chat-list">
+        <div class="chat-item">
+          <div class="chat-avatar">
+            <img src="https://picsum.photos/seed/aurora1/100/100" alt="Avatar">
+          </div>
+          <div class="chat-info">
+            <div class="chat-name">Aurora Winters</div>
+            <div class="chat-book">Frozen Hearts Thaw</div>
+          </div>
+          <div class="chat-meta">
+            <div class="chat-badge">New</div>
+          </div>
+        </div>
+
+        <div class="chat-item">
+          <div class="chat-avatar">
+            <img src="https://picsum.photos/seed/felix/100/100" alt="Avatar">
+          </div>
+          <div class="chat-info">
+            <div class="chat-name">Felix Hartwell</div>
+            <div class="chat-book">The Sunshine Effect</div>
+          </div>
+          <div class="chat-meta">
+            <div class="chat-time">3h ago</div>
+          </div>
+        </div>
+
+        <div class="chat-item">
+          <div class="chat-avatar">
+            <img src="https://picsum.photos/seed/maya/100/100" alt="Avatar">
+          </div>
+          <div class="chat-info">
+            <div class="chat-name">Maya Chen</div>
+            <div class="chat-book">Second Chances Cafe</div>
+          </div>
+          <div class="chat-meta">
+            <div class="chat-time">Yesterday</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Passed Screen -->
+    <div id="passed" class="screen">
+      <h2 class="section-header">Passed</h2>
+      <div class="chat-list">
+        <div class="chat-item passed">
+          <div class="chat-avatar">
+            <img src="https://picsum.photos/seed/ryan/100/100" alt="Avatar">
+          </div>
+          <div class="chat-info">
+            <div class="chat-name">Ryan Blake</div>
+            <div class="chat-book">Coast to Coast</div>
+          </div>
+          <div class="chat-meta">
+            <div class="chat-time">Reconsider?</div>
+          </div>
+        </div>
+
+        <div class="chat-item passed">
+          <div class="chat-avatar">
+            <img src="https://picsum.photos/seed/sophie/100/100" alt="Avatar">
+          </div>
+          <div class="chat-info">
+            <div class="chat-name">Sophie Hart</div>
+            <div class="chat-book">Small Town Love</div>
+          </div>
+          <div class="chat-meta">
+            <div class="chat-time">Reconsider?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <div class="nav-item active" onclick="showScreen('swipe')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span class="nav-label">Home</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        <span class="nav-label">Standouts</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+        <span class="nav-label">Likes</span>
+      </div>
+      <div class="nav-item" onclick="showScreen('matches')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span class="nav-label">Matches</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span class="nav-label">Profile</span>
+      </div>
+    </nav>
+  </div>
+
+  <script>
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.screen-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>
