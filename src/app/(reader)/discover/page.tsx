@@ -7,7 +7,6 @@ import { ActionButtons, MatchModal, EmptyState, ErrorState } from '@/components/
 import { useGuestState } from '@/lib/hooks/useGuestState';
 import { useCharacters } from '@/lib/hooks/useCharacters';
 import type { CharacterWithBook } from '@/types/character';
-import { cn } from '@/lib/utils/cn';
 
 type ExitDirection = 'left' | 'right' | null;
 
@@ -63,12 +62,12 @@ export default function DiscoverPage() {
   });
 
   const [exitDirection, setExitDirection] = useState<ExitDirection>(null);
+  const [lastExitDirection, setLastExitDirection] = useState<'left' | 'right'>('right');
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [matchedCharacter, setMatchedCharacter] = useState<CharacterWithBook | null>(null);
   const [showEmptyState, setShowEmptyState] = useState(false);
   const [showLoadingCard, setShowLoadingCard] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const exitDirectionRef = useRef<ExitDirection>(null);
 
   // Current and next character from the fetched pool
   const currentCharacter = characters[0] ?? null;
@@ -93,7 +92,7 @@ export default function DiscoverPage() {
     if (!currentCharacter || exitDirection) return;
 
     const isLastCharacter = characters.length === 1 && !hasMore;
-    exitDirectionRef.current = 'left';
+    setLastExitDirection('left');
     setExitDirection('left');
 
     // If last character, show loading card first
@@ -120,7 +119,7 @@ export default function DiscoverPage() {
     if (!currentCharacter || exitDirection) return;
 
     const isLastCharacter = characters.length === 1 && !hasMore;
-    exitDirectionRef.current = 'right';
+    setLastExitDirection('right');
     setExitDirection('right');
     setMatchedCharacter(currentCharacter);
 
@@ -242,7 +241,7 @@ export default function DiscoverPage() {
           ) : currentCharacter ? (
             <motion.div
               key={currentCharacter.id}
-              custom={exitDirectionRef.current || 'right'}
+              custom={lastExitDirection}
               variants={cardVariants}
               initial="enter"
               animate="center"
