@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CharacterCard } from '@/components/cards';
-import { ActionButtons, MatchModal, EmptyState } from '@/components/discover';
+import { ActionButtons, MatchModal, EmptyState, ErrorState } from '@/components/discover';
 import { useGuestState } from '@/lib/hooks/useGuestState';
-import { mockCharacters } from '@/data/mockCharacters';
+import { useCharacters } from '@/lib/hooks/useCharacters';
 import type { CharacterWithBook } from '@/types/character';
 import { cn } from '@/lib/utils/cn';
 
@@ -23,6 +23,16 @@ function LoadingCard() {
   );
 }
 
+// Initial loading state
+function InitialLoadingState() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
+      <div className="text-6xl mb-6 animate-pulse">💕</div>
+      <p className="text-text-muted font-semibold">Loading characters...</p>
+    </div>
+  );
+}
+
 export default function DiscoverPage() {
   const {
     matchedCharacterIds,
@@ -30,8 +40,27 @@ export default function DiscoverPage() {
     addMatch,
     addPass,
     resetAll,
-    isLoading,
+    isLoading: guestStateLoading,
   } = useGuestState();
+
+  // Memoize excludeIds to prevent unnecessary refetches
+  const excludeIds = useMemo(
+    () => [...matchedCharacterIds, ...passedCharacterIds],
+    [matchedCharacterIds, passedCharacterIds]
+  );
+
+  // Fetch characters from Supabase
+  const {
+    characters,
+    isLoading: charactersLoading,
+    error: charactersError,
+    hasMore,
+    fetchMore,
+    refetch,
+  } = useCharacters({
+    excludeIds,
+    limit: 10,
+  });
 
   const [exitDirection, setExitDirection] = useState<ExitDirection>(null);
   const [showMatchModal, setShowMatchModal] = useState(false);
@@ -41,30 +70,29 @@ export default function DiscoverPage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const exitDirectionRef = useRef<ExitDirection>(null);
 
-  // Filter out already matched or passed characters
-  const availableCharacters = mockCharacters.filter(
-    (char) =>
-      !matchedCharacterIds.includes(char.id) &&
-      !passedCharacterIds.includes(char.id)
-  );
+  // Current and next character from the fetched pool
+  const currentCharacter = characters[0] ?? null;
+  const nextCharacter = characters[1] ?? null;
 
-  const currentCharacter = availableCharacters[0] ?? null;
-  const nextCharacter = availableCharacters[1] ?? null;
-
+  // Pre-fetch more characters when running low (3 or fewer remaining)
+  useEffect(() => {
+    if (characters.length > 0 && characters.length <= 3 && hasMore && !charactersLoading) {
+      fetchMore();
+    }
+  }, [characters.length, hasMore, charactersLoading, fetchMore]);
 
   // Scroll to top when character changes
   useEffect(() => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    // Also scroll the window
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentCharacter?.id]);
 
   const handlePass = useCallback(() => {
     if (!currentCharacter || exitDirection) return;
 
-    const isLastCharacter = availableCharacters.length === 1;
+    const isLastCharacter = characters.length === 1 && !hasMore;
     exitDirectionRef.current = 'left';
     setExitDirection('left');
 
@@ -86,12 +114,12 @@ export default function DiscoverPage() {
         }, 2000);
       }
     }, 300);
-  }, [currentCharacter, nextCharacter, addPass, exitDirection, availableCharacters.length]);
+  }, [currentCharacter, nextCharacter, addPass, exitDirection, characters.length, hasMore]);
 
   const handleLike = useCallback(() => {
     if (!currentCharacter || exitDirection) return;
 
-    const isLastCharacter = availableCharacters.length === 1;
+    const isLastCharacter = characters.length === 1 && !hasMore;
     exitDirectionRef.current = 'right';
     setExitDirection('right');
     setMatchedCharacter(currentCharacter);
@@ -112,26 +140,26 @@ export default function DiscoverPage() {
       setShowLoadingCard(false);
       setShowMatchModal(true);
     }, 1000);
-  }, [currentCharacter, nextCharacter, addMatch, exitDirection, availableCharacters.length]);
+  }, [currentCharacter, nextCharacter, addMatch, exitDirection, characters.length, hasMore]);
 
   const handleCloseModal = useCallback(() => {
     setShowMatchModal(false);
     setMatchedCharacter(null);
     // Show empty state if no more characters
-    if (availableCharacters.length === 0) {
+    if (characters.length === 0 && !hasMore) {
       setShowEmptyState(true);
     }
-  }, [availableCharacters.length]);
+  }, [characters.length, hasMore]);
 
   const handleSeeBook = useCallback(() => {
     // Placeholder - will navigate to book page in future
     setShowMatchModal(false);
     setMatchedCharacter(null);
     // Show empty state if no more characters
-    if (availableCharacters.length === 0) {
+    if (characters.length === 0 && !hasMore) {
       setShowEmptyState(true);
     }
-  }, [availableCharacters.length]);
+  }, [characters.length, hasMore]);
 
   const handleReset = useCallback(() => {
     setShowMatchModal(false);
@@ -139,7 +167,13 @@ export default function DiscoverPage() {
     setShowEmptyState(false);
     setShowLoadingCard(false);
     resetAll();
-  }, [resetAll]);
+    // Refetch characters after reset
+    setTimeout(() => refetch(), 100);
+  }, [resetAll, refetch]);
+
+  const handleRetry = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   const handlePromptLike = useCallback((promptIndex: number) => {
     console.log('Liked prompt:', promptIndex);
@@ -169,13 +203,14 @@ export default function DiscoverPage() {
     }),
   };
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-pulse text-text-muted">Loading...</div>
-      </div>
-    );
+  // Initial loading state (guest state or first character fetch)
+  if (guestStateLoading || (charactersLoading && characters.length === 0)) {
+    return <InitialLoadingState />;
+  }
+
+  // Error state
+  if (charactersError && characters.length === 0) {
+    return <ErrorState message={charactersError} onRetry={handleRetry} />;
   }
 
   // Empty state - only show if explicitly set and modal is not open
@@ -183,8 +218,8 @@ export default function DiscoverPage() {
     return <EmptyState onReset={handleReset} />;
   }
 
-  // If no characters and no animation/modal/loading pending, show empty state
-  if (availableCharacters.length === 0 && !exitDirection && !showMatchModal && !showLoadingCard) {
+  // No characters available (either none in database or all seen)
+  if (characters.length === 0 && !exitDirection && !showMatchModal && !showLoadingCard) {
     return <EmptyState onReset={handleReset} />;
   }
 
