@@ -16,7 +16,8 @@ function NavItem({ href, icon, label, isActive }: NavItemProps) {
     <Link
       href={href}
       className={cn(
-        'flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 ease-bouncy',
+        'flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-200 ease-bouncy',
+        'min-w-[60px] min-h-[44px] px-2',
         'hover:-translate-y-[3px]',
         isActive ? 'text-primary' : 'text-text-muted'
       )}
@@ -56,7 +57,7 @@ const UserIcon = () => (
 );
 
 const NAV_ITEMS = [
-  { href: '/', icon: <HomeIcon />, label: 'Discover' },
+  { href: '/discover', icon: <HomeIcon />, label: 'Discover' },
   { href: '/matches', icon: <ChatIcon />, label: 'Chat Log' },
   { href: '/passed', icon: <ClockIcon />, label: 'Bootycalls' },
   { href: '/profile', icon: <UserIcon />, label: 'Profile' },
@@ -66,7 +67,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[428px] bg-surface flex justify-around items-center pt-3.5 pb-[26px] border-t border-primary-light shadow-nav safe-area-pb z-50">
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[428px] bg-surface flex justify-around items-center pt-4 border-t border-primary-light shadow-nav safe-area-pb z-50">
       {NAV_ITEMS.map((item) => (
         <NavItem
           key={item.href}

@@ -28,9 +28,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Safe area padding for iOS notch devices */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .safe-area-pb {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+/* Safe area padding for iOS notch devices - adds to existing padding */
+.safe-area-pb {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 }

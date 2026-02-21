@@ -64,7 +64,7 @@ const sampleCharacter: CharacterWithBook = {
   },
 };
 
-export default function ReaderHome() {
+export default function DiscoverPage() {
   const handleLike = () => {
     console.log('Liked character!');
   };
