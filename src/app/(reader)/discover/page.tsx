@@ -67,6 +67,7 @@ export default function DiscoverPage() {
   const [matchedCharacter, setMatchedCharacter] = useState<CharacterWithBook | null>(null);
   const [showEmptyState, setShowEmptyState] = useState(false);
   const [showLoadingCard, setShowLoadingCard] = useState(false);
+  const [isInitialRender, setIsInitialRender] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Current and next character from the fetched pool
@@ -87,6 +88,13 @@ export default function DiscoverPage() {
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentCharacter?.id]);
+
+  // Mark initial render as complete after first character loads
+  useEffect(() => {
+    if (currentCharacter && isInitialRender) {
+      setIsInitialRender(false);
+    }
+  }, [currentCharacter, isInitialRender]);
 
   const handlePass = useCallback(() => {
     if (!currentCharacter || exitDirection) return;
@@ -243,7 +251,7 @@ export default function DiscoverPage() {
               key={currentCharacter.id}
               custom={lastExitDirection}
               variants={cardVariants}
-              initial="enter"
+              initial={isInitialRender ? false : "enter"}
               animate="center"
               exit="exit"
             >
