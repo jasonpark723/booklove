@@ -161,14 +161,56 @@ export function BookForm({ book, mode }: BookFormProps) {
   const handleCreateTag = async () => {
     if (!tagSearch.trim()) return;
 
+    // Split by comma, trim each, filter empty strings
+    const newTagNames = tagSearch
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag && !formData.tags.includes(tag));
+
+    if (newTagNames.length === 0) {
+      setTagSearch('');
+      return;
+    }
+
     setIsCreatingTag(true);
-    const result = await createTag(tagSearch);
+
+    const createdTags: Tag[] = [];
+    for (const tagName of newTagNames) {
+      // Check if tag already exists
+      const existingTag = availableTags.find(
+        t => t.name.toLowerCase() === tagName.toLowerCase()
+      );
+      if (existingTag) {
+        // Just select existing tag
+        if (!formData.tags.includes(existingTag.name)) {
+          createdTags.push(existingTag);
+        }
+      } else {
+        // Create new tag
+        const result = await createTag(tagName);
+        if (result.success) {
+          createdTags.push(result.data);
+        }
+      }
+    }
+
     setIsCreatingTag(false);
 
-    if (result.success) {
-      setAvailableTags(prev => [...prev, result.data].sort((a, b) => a.name.localeCompare(b.name)));
-      handleTagSelect(result.data.name);
+    if (createdTags.length > 0) {
+      // Add new tags to available tags
+      setAvailableTags(prev => {
+        const combined = [...prev, ...createdTags.filter(t => !prev.some(p => p.id === t.id))];
+        return combined.sort((a, b) => a.name.localeCompare(b.name));
+      });
+      // Add all created/found tags to form
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, ...createdTags.map(t => t.name)],
+      }));
     }
+
+    setTagSearch('');
+    setIsTagDropdownOpen(false);
   };
 
   const filteredTags = availableTags.filter(
@@ -555,7 +597,7 @@ export function BookForm({ book, mode }: BookFormProps) {
               }}
               onFocus={() => setIsTagDropdownOpen(true)}
               className={inputStyles}
-              placeholder="Search or add tags..."
+              placeholder="Search or add tags (comma-separated)..."
             />
 
             {/* Dropdown */}
@@ -572,14 +614,16 @@ export function BookForm({ book, mode }: BookFormProps) {
                   </button>
                 ))}
 
-                {tagSearch && !filteredTags.some(t => t.name === tagSearch.toLowerCase().trim().replace(/\s+/g, '-')) && (
+                {tagSearch && (
                   <button
                     type="button"
                     onClick={handleCreateTag}
                     disabled={isCreatingTag}
                     className="w-full px-4 py-2 text-left hover:bg-gray-50 text-pink-600 border-t"
                   >
-                    {isCreatingTag ? 'Creating...' : `Create "${tagSearch.toLowerCase().trim().replace(/\s+/g, '-')}"`}
+                    {isCreatingTag ? 'Creating...' : tagSearch.includes(',')
+                      ? `Add tags: ${tagSearch.split(',').map(t => t.trim()).filter(Boolean).join(', ')}`
+                      : `Create "${tagSearch.toLowerCase().trim().replace(/\s+/g, '-')}"`}
                   </button>
                 )}
 
