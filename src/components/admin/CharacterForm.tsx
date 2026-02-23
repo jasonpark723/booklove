@@ -40,6 +40,7 @@ const initialFormData: CharacterFormData = {
   traits: [],
   hobbies: [],
   occupation: '',
+  opening_line: '',
   prompts: [],
   images: [],
   is_published: false,
@@ -83,6 +84,7 @@ export function CharacterForm({ character, mode }: CharacterFormProps) {
         traits: character.traits || [],
         hobbies: character.hobbies || [],
         occupation: character.occupation || '',
+        opening_line: character.opening_line || '',
         prompts: character.prompts || [],
         images: character.images || [],
         is_published: character.is_published,
@@ -225,6 +227,22 @@ export function CharacterForm({ character, mode }: CharacterFormProps) {
           </select>
         </FormField>
       </div>
+
+      {/* Opening Line */}
+      <FormField
+        label="Opening Line"
+        hint={`Preview text shown in matches list (${formData.opening_line.length}/200)`}
+      >
+        <textarea
+          name="opening_line"
+          value={formData.opening_line}
+          onChange={handleChange}
+          maxLength={200}
+          rows={2}
+          className={inputStyles}
+          placeholder="e.g., &quot;If you're looking for someone who'll bring you flowers and also teach you sword fighting...&quot;"
+        />
+      </FormField>
 
       {/* Occupation */}
       <FormField label="Occupation">

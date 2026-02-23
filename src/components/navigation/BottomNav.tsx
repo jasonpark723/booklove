@@ -3,15 +3,17 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils/cn';
+import { useUser } from '@/context/UserContext';
 
 interface NavItemProps {
   href: string;
   icon: React.ReactNode;
   label: string;
   isActive: boolean;
+  showBadge?: boolean;
 }
 
-function NavItem({ href, icon, label, isActive }: NavItemProps) {
+function NavItem({ href, icon, label, isActive, showBadge }: NavItemProps) {
   return (
     <Link
       href={href}
@@ -22,7 +24,12 @@ function NavItem({ href, icon, label, isActive }: NavItemProps) {
         isActive ? 'text-primary' : 'text-text-muted'
       )}
     >
-      <span className="w-6 h-6">{icon}</span>
+      <span className="relative w-6 h-6">
+        {icon}
+        {showBadge && (
+          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full" />
+        )}
+      </span>
       <span className="text-[10px] font-bold">{label}</span>
     </Link>
   );
@@ -58,13 +65,14 @@ const UserIcon = () => (
 
 const NAV_ITEMS = [
   { href: '/discover', icon: <HomeIcon />, label: 'Discover' },
-  { href: '/matches', icon: <ChatIcon />, label: 'Chat Log' },
+  { href: '/matches', icon: <ChatIcon />, label: 'Chat Log', showBadgeKey: 'matches' as const },
   { href: '/passed', icon: <ClockIcon />, label: 'Bootycalls' },
   { href: '/profile', icon: <UserIcon />, label: 'Profile' },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { hasUnreadMatches } = useUser();
 
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[428px] bg-surface flex justify-around items-center pt-4 border-t border-primary-light shadow-nav safe-area-pb z-50">
@@ -75,6 +83,7 @@ export function BottomNav() {
           icon={item.icon}
           label={item.label}
           isActive={pathname === item.href}
+          showBadge={item.showBadgeKey === 'matches' && hasUnreadMatches}
         />
       ))}
     </nav>

@@ -23,6 +23,7 @@ export interface Character {
   traits: string[];
   hobbies: string[];
   occupation: string | null;
+  opening_line: string | null;
   prompts: CharacterPrompt[];
   images: CharacterImage[];
   is_published: boolean;
@@ -44,6 +45,7 @@ export interface CharacterFormData {
   traits: string[];
   hobbies: string[];
   occupation: string;
+  opening_line: string;
   prompts: CharacterPrompt[];
   images: CharacterImage[];
   is_published: boolean;

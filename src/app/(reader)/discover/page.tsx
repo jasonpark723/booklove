@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CharacterCard } from '@/components/cards';
 import { ActionButtons, MatchModal, EmptyState, ErrorState } from '@/components/discover';
-import { useGuestState } from '@/lib/hooks/useGuestState';
+import { useUser } from '@/context/UserContext';
 import { useCharacters } from '@/lib/hooks/useCharacters';
 import type { CharacterWithBook } from '@/types/character';
 
@@ -38,9 +38,9 @@ export default function DiscoverPage() {
     passedCharacterIds,
     addMatch,
     addPass,
-    resetAll,
-    isLoading: guestStateLoading,
-  } = useGuestState();
+    resetPasses,
+    isLoading: userLoading,
+  } = useUser();
 
   // Memoize excludeIds to prevent unnecessary refetches
   const excludeIds = useMemo(
@@ -166,9 +166,9 @@ export default function DiscoverPage() {
     setMatchedCharacter(null);
     setShowEmptyState(false);
     setShowLoadingCard(false);
-    resetAll();
+    resetPasses();
     // useCharacters will auto-refetch when excludeIds changes
-  }, [resetAll]);
+  }, [resetPasses]);
 
   const handleRetry = useCallback(() => {
     refetch();
@@ -202,8 +202,8 @@ export default function DiscoverPage() {
     }),
   };
 
-  // Initial loading state (guest state or first character fetch)
-  if (guestStateLoading || (charactersLoading && characters.length === 0)) {
+  // Initial loading state (user state or first character fetch)
+  if (userLoading || (charactersLoading && characters.length === 0)) {
     return <InitialLoadingState />;
   }
 

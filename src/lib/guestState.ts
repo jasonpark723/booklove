@@ -1,6 +1,6 @@
 // Guest state localStorage management utilities
 
-import { GuestState, GUEST_STORAGE_KEY, createInitialGuestState } from '@/types/guest';
+import { GuestState, GuestMatch, GUEST_STORAGE_KEY, createInitialGuestState } from '@/types/guest';
 
 // Check if localStorage is available
 function isLocalStorageAvailable(): boolean {
@@ -14,15 +14,44 @@ function isLocalStorageAvailable(): boolean {
   }
 }
 
-// Validate guest state structure
-function isValidGuestState(state: unknown): state is GuestState {
+// Validate guest state structure (supports both old and new format)
+function isValidGuestState(state: unknown): boolean {
   if (!state || typeof state !== 'object') return false;
   const s = state as Record<string, unknown>;
+  // Valid if it has visitorId and either matches array or matchedCharacterIds array
   return (
     typeof s.visitorId === 'string' &&
-    Array.isArray(s.matchedCharacterIds) &&
+    (Array.isArray(s.matches) || Array.isArray(s.matchedCharacterIds)) &&
     Array.isArray(s.passedCharacterIds)
   );
+}
+
+// Migrate old matchedCharacterIds format to new matches format
+function migrateGuestState(state: Record<string, unknown>): GuestState {
+  // If already has matches array, just ensure proper types
+  if (Array.isArray(state.matches)) {
+    return state as unknown as GuestState;
+  }
+
+  // Migrate from old matchedCharacterIds format
+  const oldMatches = (state.matchedCharacterIds as string[]) || [];
+  const newMatches: GuestMatch[] = oldMatches.map((characterId) => ({
+    characterId,
+    matchedAt: null, // null indicates migrated match
+    isRead: true, // Mark existing matches as read
+  }));
+
+  return {
+    visitorId: state.visitorId as string,
+    genrePreferences: (state.genrePreferences as string[]) || [],
+    prefersSpicy: (state.prefersSpicy as boolean | null) ?? null,
+    matches: newMatches,
+    passedCharacterIds: (state.passedCharacterIds as string[]) || [],
+    readBookIds: (state.readBookIds as string[]) || [],
+    currentCharacterId: (state.currentCharacterId as string | null) ?? null,
+    lastVisit: (state.lastVisit as string) || new Date().toISOString(),
+    signupPromptDismissed: (state.signupPromptDismissed as boolean) ?? false,
+  };
 }
 
 // Initialize or retrieve guest state
@@ -36,11 +65,14 @@ export function initGuestState(): GuestState | null {
     try {
       const parsed = JSON.parse(existing);
       if (isValidGuestState(parsed)) {
-        // Migrate older state that may be missing signupPromptDismissed
-        if (typeof parsed.signupPromptDismissed !== 'boolean') {
-          parsed.signupPromptDismissed = false;
+        // Migrate to new format and handle missing fields
+        const migrated = migrateGuestState(parsed);
+        if (typeof migrated.signupPromptDismissed !== 'boolean') {
+          migrated.signupPromptDismissed = false;
         }
-        return parsed;
+        // Save migrated state back to localStorage
+        localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(migrated));
+        return migrated;
       }
     } catch {
       // Corrupted data, will create fresh state
@@ -66,7 +98,7 @@ export function getGuestState(): GuestState | null {
   try {
     const parsed = JSON.parse(existing);
     if (isValidGuestState(parsed)) {
-      return parsed;
+      return migrateGuestState(parsed);
     }
   } catch {
     // Corrupted data
@@ -113,7 +145,7 @@ export function checkReturnVisit(): {
   }
 
   const hasData =
-    state.matchedCharacterIds.length > 0 || state.passedCharacterIds.length > 0;
+    state.matches.length > 0 || state.passedCharacterIds.length > 0;
   const canResume = state.currentCharacterId !== null;
 
   return { isReturning: true, hasData, canResume };
@@ -123,7 +155,7 @@ export function checkReturnVisit(): {
 export function shouldShowSignupPrompt(): boolean {
   const state = getGuestState();
   if (!state) return false;
-  return state.matchedCharacterIds.length === 3 && !state.signupPromptDismissed;
+  return state.matches.length === 3 && !state.signupPromptDismissed;
 }
 
 // Action handlers
@@ -136,12 +168,19 @@ export function handleMatch(
   if (!state) return null;
 
   // Don't add duplicates
-  if (state.matchedCharacterIds.includes(characterId)) {
+  const existingMatch = state.matches.find((m) => m.characterId === characterId);
+  if (existingMatch) {
     return updateGuestState({ currentCharacterId: nextCharacterId });
   }
 
+  const newMatch: GuestMatch = {
+    characterId,
+    matchedAt: new Date().toISOString(),
+    isRead: false,
+  };
+
   return updateGuestState({
-    matchedCharacterIds: [...state.matchedCharacterIds, characterId],
+    matches: [...state.matches, newMatch],
     currentCharacterId: nextCharacterId,
   });
 }
@@ -192,7 +231,7 @@ export function handleRemoveMatch(characterId: string): GuestState | null {
   if (!state) return null;
 
   return updateGuestState({
-    matchedCharacterIds: state.matchedCharacterIds.filter((id) => id !== characterId),
+    matches: state.matches.filter((m) => m.characterId !== characterId),
   });
 }
 
@@ -214,9 +253,22 @@ export function handleReset(): GuestState | null {
 
 export function handleResetAll(): GuestState | null {
   return updateGuestState({
-    matchedCharacterIds: [],
+    matches: [],
     passedCharacterIds: [],
     currentCharacterId: null,
+  });
+}
+
+export function handleMarkMatchAsRead(characterId: string): GuestState | null {
+  const state = initGuestState();
+  if (!state) return null;
+
+  const updatedMatches = state.matches.map((m) =>
+    m.characterId === characterId ? { ...m, isRead: true } : m
+  );
+
+  return updateGuestState({
+    matches: updatedMatches,
   });
 }
 

@@ -7,6 +7,7 @@ export const mockCharacters: CharacterWithBook[] = [
     name: 'Aurora Winters',
     gender: 'female',
     occupation: 'Ice Queen Heir',
+    opening_line: "If you can handle the cold, I promise the warmth underneath is worth it.",
     traits: ['Cold Exterior', 'Secretly Soft', 'Protective'],
     hobbies: ['Ice Skating', 'Reading'],
     prompts: [
@@ -66,6 +67,7 @@ export const mockCharacters: CharacterWithBook[] = [
     name: 'Marcus Chen',
     gender: 'male',
     occupation: 'CEO & Former Street Racer',
+    opening_line: "I don't do second chances. But for you? I'd make an exception.",
     traits: ['Brooding', 'Loyal', 'Secretly Romantic'],
     hobbies: ['Restoring Classic Cars', 'Late Night Drives'],
     prompts: [
@@ -121,6 +123,7 @@ export const mockCharacters: CharacterWithBook[] = [
     name: 'Sage Thornwood',
     gender: 'non-binary',
     occupation: 'Bookshop Owner & Hedge Witch',
+    opening_line: "The cards said someone interesting would walk through my door today.",
     traits: ['Mysterious', 'Nurturing', 'Fiercely Independent'],
     hobbies: ['Herbalism', 'Tarot', 'Baking'],
     prompts: [
@@ -181,6 +184,7 @@ export const mockCharacters: CharacterWithBook[] = [
     name: 'Dante Moretti',
     gender: 'male',
     occupation: 'Ex-Military Bodyguard',
+    opening_line: "I don't usually talk much. But something tells me you're worth the words.",
     traits: ['Protective', 'Scarred', 'Touch-Starved'],
     hobbies: ['Boxing', 'Cooking Italian Food'],
     prompts: [
@@ -236,6 +240,7 @@ export const mockCharacters: CharacterWithBook[] = [
     name: 'Lily Park',
     gender: 'female',
     occupation: 'Pastry Chef & Reluctant Heiress',
+    opening_line: "Fair warning: I communicate primarily through baked goods and sarcasm.",
     traits: ['Sunshine Personality', 'Stubborn', 'Secretly Anxious'],
     hobbies: ['Baking', 'K-Drama Marathons', 'Plant Collecting'],
     prompts: [
