@@ -1,7 +1,7 @@
 // React hook for guest state management
 
 import { useState, useEffect, useCallback } from 'react';
-import { GuestState } from '@/types/guest';
+import { GuestState, GuestMatch } from '@/types/guest';
 import {
   initGuestState,
   getGuestState,
@@ -17,6 +17,7 @@ import {
   handleResetAll as guestHandleResetAll,
   handleDismissSignupPrompt as guestHandleDismissSignupPrompt,
   handleSetPreferences as guestHandleSetPreferences,
+  handleMarkMatchAsRead as guestHandleMarkMatchAsRead,
 } from '@/lib/guestState';
 
 interface UseGuestStateReturn {
@@ -35,11 +36,14 @@ interface UseGuestStateReturn {
   dismissSignupPrompt: () => void;
   setPreferences: (genres: string[], prefersSpicy: boolean | null) => void;
   setCurrentCharacter: (characterId: string | null) => void;
+  markMatchAsRead: (characterId: string) => void;
   clearState: () => void;
   // Computed values
+  matches: GuestMatch[];
   matchedCharacterIds: string[];
   passedCharacterIds: string[];
   readBookIds: string[];
+  hasUnreadMatches: boolean;
   shouldShowSignupPrompt: boolean;
 }
 
@@ -121,6 +125,11 @@ export function useGuestState(): UseGuestStateReturn {
     if (updated) setGuestState(updated);
   }, []);
 
+  const markMatchAsRead = useCallback((characterId: string) => {
+    const updated = guestHandleMarkMatchAsRead(characterId);
+    if (updated) setGuestState(updated);
+  }, []);
+
   const clearState = useCallback(() => {
     clearGuestState();
     setGuestState(null);
@@ -128,11 +137,13 @@ export function useGuestState(): UseGuestStateReturn {
   }, []);
 
   // Computed values
-  const matchedCharacterIds = guestState?.matchedCharacterIds ?? [];
+  const matches = guestState?.matches ?? [];
+  const matchedCharacterIds = matches.map((m) => m.characterId);
   const passedCharacterIds = guestState?.passedCharacterIds ?? [];
   const readBookIds = guestState?.readBookIds ?? [];
+  const hasUnreadMatches = matches.some((m) => !m.isRead);
   const shouldShowSignupPrompt =
-    matchedCharacterIds.length === 3 && !guestState?.signupPromptDismissed;
+    matches.length === 3 && !guestState?.signupPromptDismissed;
 
   return {
     guestState,
@@ -149,10 +160,13 @@ export function useGuestState(): UseGuestStateReturn {
     dismissSignupPrompt,
     setPreferences,
     setCurrentCharacter,
+    markMatchAsRead,
     clearState,
+    matches,
     matchedCharacterIds,
     passedCharacterIds,
     readBookIds,
+    hasUnreadMatches,
     shouldShowSignupPrompt,
   };
 }

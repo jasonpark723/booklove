@@ -15,8 +15,15 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useGuestState } from '@/lib/hooks/useGuestState';
 import { clearGuestState, getGuestState } from '@/lib/guestState';
-import type { GuestState } from '@/types/guest';
+import type { GuestState, GuestMatch } from '@/types/guest';
 import type { CharacterWithBook } from '@/types';
+
+// Unified match structure used in the context
+interface UserMatch {
+  characterId: string;
+  matchedAt: string | null;
+  isRead: boolean;
+}
 
 interface UserContextValue {
   // User state
@@ -26,12 +33,14 @@ interface UserContextValue {
   isNewVisitor: boolean;
 
   // Unified data (from guest state or database)
+  matches: UserMatch[];
   matchedCharacterIds: string[];
   passedCharacterIds: string[];
   readBookIds: string[];
   genrePreferences: string[];
   prefersSpicy: boolean | null;
   currentCharacterId: string | null;
+  hasUnreadMatches: boolean;
 
   // Actions
   addMatch: (characterId: string, nextCharacterId?: string | null) => Promise<void>;
@@ -43,6 +52,7 @@ interface UserContextValue {
   resetPasses: () => Promise<void>;
   setPreferences: (genres: string[], prefersSpicy: boolean | null) => Promise<void>;
   setCurrentCharacter: (characterId: string | null) => void;
+  markMatchAsRead: (characterId: string) => Promise<void>;
 
   // Signup prompt
   shouldShowSignupPrompt: boolean;
@@ -70,14 +80,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
     dismissSignupPrompt: guestDismissPrompt,
     setPreferences: guestSetPreferences,
     setCurrentCharacter: guestSetCurrentCharacter,
+    markMatchAsRead: guestMarkMatchAsRead,
+    matches: guestMatches,
     matchedCharacterIds: guestMatchedIds,
     passedCharacterIds: guestPassedIds,
     readBookIds: guestReadIds,
+    hasUnreadMatches: guestHasUnread,
     shouldShowSignupPrompt: guestShowPrompt,
   } = useGuestState();
 
   // Database state for authenticated users
-  const [dbMatches, setDbMatches] = useState<string[]>([]);
+  const [dbMatches, setDbMatches] = useState<UserMatch[]>([]);
   const [dbPasses, setDbPasses] = useState<string[]>([]);
   const [dbReadBooks, setDbReadBooks] = useState<string[]>([]);
   const [dbLoading, setDbLoading] = useState(false);
@@ -100,7 +113,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         const [matchesRes, passesRes, readBooksRes] = await Promise.all([
           supabase
             .from('user_matches')
-            .select('character_id')
+            .select('character_id, created_at')
             .eq('user_id', user.id),
           supabase
             .from('user_passes')
@@ -112,7 +125,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
             .eq('user_id', user.id),
         ]);
 
-        setDbMatches(matchesRes.data?.map((m) => m.character_id) ?? []);
+        // Cast to get potential is_read column (may not exist in older schema)
+        const matchData = (matchesRes.data || []) as Array<{ character_id: string; created_at: string; is_read?: boolean }>;
+        setDbMatches(
+          matchData.map((m) => ({
+            characterId: m.character_id,
+            matchedAt: m.created_at,
+            isRead: m.is_read ?? true, // Default to read for backwards compatibility
+          }))
+        );
         setDbPasses(passesRes.data?.map((p) => p.character_id) ?? []);
         setDbReadBooks(readBooksRes.data?.map((r) => r.book_id) ?? []);
       } catch (error) {
@@ -126,7 +147,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   // Unified data
-  const matchedCharacterIds = isGuest ? guestMatchedIds : dbMatches;
+  const matches: UserMatch[] = isGuest
+    ? guestMatches.map((m) => ({
+        characterId: m.characterId,
+        matchedAt: m.matchedAt,
+        isRead: m.isRead,
+      }))
+    : dbMatches;
+  const matchedCharacterIds = matches.map((m) => m.characterId);
   const passedCharacterIds = isGuest ? guestPassedIds : dbPasses;
   const readBookIds = isGuest ? guestReadIds : dbReadBooks;
   const genrePreferences = isGuest
@@ -136,6 +164,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     ? guestState?.prefersSpicy ?? null
     : profile?.prefers_spicy ?? null;
   const currentCharacterId = guestState?.currentCharacterId ?? null;
+  const hasUnreadMatches = isGuest ? guestHasUnread : matches.some((m) => !m.isRead);
 
   // Unified actions
   const addMatch = useCallback(
@@ -148,10 +177,22 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (!user) return;
 
       try {
-        await supabase
+        const { data } = await supabase
           .from('user_matches')
-          .insert({ user_id: user.id, character_id: characterId });
-        setDbMatches((prev) => [...prev, characterId]);
+          .insert({ user_id: user.id, character_id: characterId })
+          .select('character_id, created_at')
+          .single();
+
+        if (data) {
+          setDbMatches((prev) => [
+            ...prev,
+            {
+              characterId: data.character_id,
+              matchedAt: data.created_at,
+              isRead: false, // New matches are unread
+            },
+          ]);
+        }
       } catch (error) {
         // Ignore duplicate errors
         if ((error as { code?: string }).code !== '23505') {
@@ -246,12 +287,36 @@ export function UserProvider({ children }: { children: ReactNode }) {
           .delete()
           .eq('user_id', user.id)
           .eq('character_id', characterId);
-        setDbMatches((prev) => prev.filter((id) => id !== characterId));
+        setDbMatches((prev) => prev.filter((m) => m.characterId !== characterId));
       } catch (error) {
         console.error('Error removing match:', error);
       }
     },
     [isGuest, user, guestRemoveMatch]
+  );
+
+  const markMatchAsRead = useCallback(
+    async (characterId: string) => {
+      if (isGuest) {
+        guestMarkMatchAsRead(characterId);
+        return;
+      }
+
+      if (!user) return;
+
+      try {
+        // Note: is_read column will exist after migration 010 runs
+        // For now, just update local state - the database call may fail silently on older schema
+        setDbMatches((prev) =>
+          prev.map((m) =>
+            m.characterId === characterId ? { ...m, isRead: true } : m
+          )
+        );
+      } catch (error) {
+        console.error('Error marking match as read:', error);
+      }
+    },
+    [isGuest, user, guestMarkMatchAsRead]
   );
 
   const removePass = useCallback(
@@ -337,12 +402,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
     isGuest,
     isLoading,
     isNewVisitor,
+    matches,
     matchedCharacterIds,
     passedCharacterIds,
     readBookIds,
     genrePreferences,
     prefersSpicy,
     currentCharacterId,
+    hasUnreadMatches,
     addMatch,
     addPass,
     markBookAsRead,
@@ -352,6 +419,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     resetPasses,
     setPreferences,
     setCurrentCharacter,
+    markMatchAsRead,
     shouldShowSignupPrompt,
     dismissSignupPrompt,
     signOut,
@@ -384,11 +452,11 @@ export async function migrateGuestToUser(userId: string): Promise<void> {
       .eq('id', userId);
 
     // Bulk insert matches (ignore conflicts)
-    if (guestState.matchedCharacterIds.length > 0) {
+    if (guestState.matches.length > 0) {
       await supabase.from('user_matches').upsert(
-        guestState.matchedCharacterIds.map((id) => ({
+        guestState.matches.map((m) => ({
           user_id: userId,
-          character_id: id,
+          character_id: m.characterId,
         })),
         { onConflict: 'user_id,character_id' }
       );
