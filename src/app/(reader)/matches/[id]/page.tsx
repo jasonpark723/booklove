@@ -2,8 +2,11 @@
 
 import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { useCharacter } from '@/lib/hooks/useCharacters';
 import { useUser } from '@/context/UserContext';
+import { ChatHeader } from '@/components/matches/ChatHeader';
+import { ChatContent } from '@/components/matches/ChatContent';
 import { Button } from '@/components/ui/Button';
 
 const BackIcon = () => (
@@ -14,10 +17,35 @@ const BackIcon = () => (
 
 function LoadingSkeleton() {
   return (
-    <div className="animate-pulse p-4">
-      <div className="h-8 bg-gray-200 rounded w-32 mb-4" />
-      <div className="h-4 bg-gray-100 rounded w-full mb-2" />
-      <div className="h-4 bg-gray-100 rounded w-3/4" />
+    <div className="min-h-screen bg-background">
+      {/* Header skeleton */}
+      <header className="sticky top-0 bg-surface border-b border-gray-100 px-2 py-2 z-10">
+        <div className="flex items-center justify-between">
+          <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
+            <div className="w-24 h-5 bg-gray-200 rounded animate-pulse" />
+          </div>
+          <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
+        </div>
+      </header>
+
+      {/* Content skeleton */}
+      <div className="px-4 py-6">
+        <div className="text-center mb-6">
+          <div className="w-20 h-4 bg-gray-200 rounded mx-auto mb-2 animate-pulse" />
+          <div className="w-32 h-6 bg-gray-200 rounded mx-auto animate-pulse" />
+        </div>
+        <div className="flex items-start gap-2 mb-6">
+          <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
+          <div className="flex-1">
+            <div className="bg-gray-100 rounded-2xl rounded-tl-md p-4">
+              <div className="w-full h-4 bg-gray-200 rounded mb-2 animate-pulse" />
+              <div className="w-3/4 h-4 bg-gray-200 rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -36,32 +64,26 @@ export default function MatchDetailPage() {
     }
   }, [characterId, markMatchAsRead]);
 
+  const handleBack = () => {
+    router.push('/matches');
+  };
+
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <header className="sticky top-0 bg-surface border-b border-gray-100 px-4 py-3 z-10 flex items-center gap-3">
-          <button onClick={() => router.back()} className="p-1 -ml-1">
-            <BackIcon />
-          </button>
-          <div className="h-6 bg-gray-200 rounded w-24 animate-pulse" />
-        </header>
-        <LoadingSkeleton />
-      </div>
-    );
+    return <LoadingSkeleton />;
   }
 
   if (error || !character) {
     return (
       <div className="min-h-screen bg-background">
         <header className="sticky top-0 bg-surface border-b border-gray-100 px-4 py-3 z-10 flex items-center gap-3">
-          <button onClick={() => router.back()} className="p-1 -ml-1">
+          <button onClick={handleBack} className="p-1 -ml-1">
             <BackIcon />
           </button>
           <h1 className="text-lg font-bold text-text-primary">Error</h1>
         </header>
         <div className="p-4 text-center">
           <p className="text-red-500 mb-4">{error || 'Character not found'}</p>
-          <Button variant="secondary" onClick={() => router.push('/matches')}>
+          <Button variant="secondary" onClick={handleBack}>
             Back to Matches
           </Button>
         </div>
@@ -69,75 +91,16 @@ export default function MatchDetailPage() {
     );
   }
 
-  // Get primary image
-  const primaryImage =
-    character.images?.find((img) => img.is_primary) || character.images?.[0];
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 bg-surface border-b border-gray-100 px-4 py-3 z-10 flex items-center gap-3">
-        <button onClick={() => router.back()} className="p-1 -ml-1">
-          <BackIcon />
-        </button>
-        <h1 className="text-lg font-bold text-text-primary">{character.name}</h1>
-      </header>
-
-      {/* Placeholder content - Chat detail will be implemented in issue #34 */}
-      <div className="p-4">
-        {/* Character preview */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-            {primaryImage?.url ? (
-              <img
-                src={primaryImage.url}
-                alt={character.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl font-bold">
-                {character.name.charAt(0)}
-              </div>
-            )}
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-text-primary">{character.name}</h2>
-            {character.occupation && (
-              <p className="text-text-muted">{character.occupation}</p>
-            )}
-            <p className="text-sm text-text-muted">
-              From &quot;{character.book?.title}&quot;
-            </p>
-          </div>
-        </div>
-
-        {/* Opening line */}
-        {character.opening_line && (
-          <div className="bg-primary-light/20 rounded-2xl rounded-tl-sm p-4 mb-4">
-            <p className="text-text-primary italic">&quot;{character.opening_line}&quot;</p>
-          </div>
-        )}
-
-        {/* Coming soon notice */}
-        <div className="bg-gray-50 rounded-lg p-6 text-center mt-8">
-          <p className="text-text-muted mb-2">
-            Full chat experience coming soon!
-          </p>
-          <p className="text-sm text-text-muted">
-            For now, check out the book to continue your connection with {character.name}.
-          </p>
-          {character.book?.amazon_affiliate_link && (
-            <a
-              href={character.book.amazon_affiliate_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block mt-4"
-            >
-              <Button variant="primary">Get the Book</Button>
-            </a>
-          )}
-        </div>
-      </div>
-    </div>
+    <motion.div
+      className="min-h-screen bg-background flex flex-col"
+      initial={{ x: '100%' }}
+      animate={{ x: 0 }}
+      exit={{ x: '100%' }}
+      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+    >
+      <ChatHeader character={character} onBack={handleBack} />
+      <ChatContent character={character} />
+    </motion.div>
   );
 }
