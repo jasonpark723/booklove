@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CharacterCard } from '@/components/cards';
 import { ActionButtons, MatchModal, EmptyState, ErrorState } from '@/components/discover';
@@ -33,6 +34,7 @@ function InitialLoadingState() {
 }
 
 export default function DiscoverPage() {
+  const router = useRouter();
   const {
     matchedCharacterIds,
     passedCharacterIds,
@@ -152,14 +154,16 @@ export default function DiscoverPage() {
   }, [characters.length, hasMore]);
 
   const handleSeeBook = useCallback(() => {
-    // Placeholder - will navigate to book page in future
+    if (matchedCharacter) {
+      router.push(`/matches/${matchedCharacter.id}`);
+    }
     setShowMatchModal(false);
     setMatchedCharacter(null);
     // Show empty state if no more characters
     if (characters.length === 0 && !hasMore) {
       setShowEmptyState(true);
     }
-  }, [characters.length, hasMore]);
+  }, [matchedCharacter, router, characters.length, hasMore]);
 
   const handleReset = useCallback(() => {
     setShowMatchModal(false);

@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCharacter } from '@/lib/hooks/useCharacters';
+import { useUser } from '@/context/UserContext';
 import { Button } from '@/components/ui/Button';
 
 const BackIcon = () => (
@@ -25,6 +27,14 @@ export default function MatchDetailPage() {
   const router = useRouter();
   const characterId = params.id as string;
   const { character, isLoading, error } = useCharacter(characterId);
+  const { markMatchAsRead } = useUser();
+
+  // Mark match as read when viewing the detail page
+  useEffect(() => {
+    if (characterId) {
+      markMatchAsRead(characterId);
+    }
+  }, [characterId, markMatchAsRead]);
 
   if (isLoading) {
     return (
